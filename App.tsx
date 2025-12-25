@@ -249,7 +249,7 @@ const App: React.FC = () => {
     }
   };
 
-  // --- 关键修复：动态配置 Tailwind 和样式，而不是强制覆盖 ---
+  // --- 终极修复：布局、图标、链接逻辑全部重写 ---
   const exportForGithub = () => {
     const siteData = { profile, theme, primaryColor };
     
@@ -264,7 +264,6 @@ const App: React.FC = () => {
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=JetBrains+Mono&display=swap" rel="stylesheet">
     
-    <!-- 关键点1：配置 Tailwind 使用我们引入的字体 -->
     <script>
       tailwind.config = {
         theme: {
@@ -280,12 +279,20 @@ const App: React.FC = () => {
     </script>
 
     <style>
-        /* 关键点2：基础样式，保留灵活性 */
-        body { background-color: #f8fafc; color: #0f172a; }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #f8fafc; 
+            color: #0f172a; 
+        }
+        .font-serif { font-family: 'Lora', serif !important; }
+        .font-mono { font-family: 'JetBrains Mono', monospace !important; }
+        
+        .content-text {
+            white-space: pre-wrap !important;
+            word-wrap: break-word;
+        }
+
         .theme-container { transition: all 0.5s ease; }
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         a { text-decoration: none; color: inherit; }
     </style>
 </head>
@@ -309,13 +316,14 @@ const App: React.FC = () => {
             };
 
             const getStyleAttr = (s) => {
-              if(!s) return 'style="white-space: pre-wrap;"'; // 默认保留换行
-              let styleStr = 'style="white-space: pre-wrap; '; // 关键点3：强制保留换行
+              if(!s) return 'style="white-space: pre-wrap;"';
+              let styleStr = 'style="white-space: pre-wrap; ';
               
               if(s.fontSize) styleStr += \`font-size: \${String(s.fontSize).match(/^\\d+$/) ? s.fontSize + 'px' : s.fontSize};\`;
               if(s.fontWeight) styleStr += \`font-weight: \${s.fontWeight};\`;
+              if(s.fontStyle) styleStr += \`font-style: \${s.fontStyle};\`; /* 修复斜体 */
               if(s.color) styleStr += \`color: \${s.color};\`;
-              /* 关键点4：动态使用用户选择的字体 */
+              
               if(s.fontFamily && families[s.fontFamily]) {
                   styleStr += \`font-family: \${families[s.fontFamily]};\`;
               }
@@ -323,6 +331,19 @@ const App: React.FC = () => {
               
               styleStr += '"';
               return styleStr;
+            };
+
+            // 图标 SVG 字典
+            const getIconSvg = (name) => {
+                const iconSize = "w-full h-full p-0.5";
+                const icons = {
+                    github: \`<svg class="\${iconSize}" fill="currentColor" viewBox="0 0 24 24"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>\`,
+                    email: \`<svg class="\${iconSize}" viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>\`,
+                    scholar: \`<svg class="\${iconSize}" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L1 7l11 5 9-4.09V17h2V7L12 2zm0 18c-3.31 0-6-2.69-6-6 0-1.34.45-2.58 1.21-3.57L12 13.1l4.79-2.67c.76.99 1.21 2.23 1.21 3.57 0 3.31-2.69-6-6 6z"/></svg>\`,
+                    orcid: \`<div class="w-full h-full bg-[#A6CE39] rounded-full flex items-center justify-center p-0.5"><svg viewBox="0 0 256 256" class="w-full h-full fill-white"><path d="M256,128c0,70.69-57.31,128-128,128S0,198.69,0,128S57.31,0,128,0,256,57.31,256,128z M71.94,189.26h20.17v-84.3H71.94 V189.26z M82.02,94.94c7.47,0,13.54-6.07,13.54-13.54S89.49,67.86,82.02,67.86S68.48,73.93,68.48,81.4S74.55,94.94,82.02,94.94z M107.03,189.26h40.35c34.1,0,46.5-24.18,46.5-42.15c0-30.83-22.18-42.15-46.5-42.15h-40.35V189.26z M127.2,172.11v-50h14.71 c22.42,0,32.32,12.72,32.32,25.01c0,16.51-12.35,25.01-32.32,25.01H127.2z" /></svg></div>\`,
+                    location: \`<svg class="\${iconSize}" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>\`
+                };
+                return icons[name] || '<span class="text-[8px] font-black uppercase">' + name.substring(0,4) + '</span>';
             };
 
             const processText = (text, links) => {
@@ -358,19 +379,28 @@ const App: React.FC = () => {
                 });
 
                 return segments.map(seg => {
-                    if (!seg.link) return seg.text;
+                    if (!seg.link) return \`<span class="content-text">\${seg.text}</span>\`;
+                    
                     const link = seg.link;
-                    // 移除 style=" 前缀，因为我们要组合样式
                     const rawStyle = getStyleAttr(link.style).replace('style="', '').replace('"', '');
                     let href = link.url || '#';
                     let onClick = '';
+                    
+                    /* 修复：只有真正的链接才加 href 和下划线，否则只是 span */
+                    const isRealLink = (link.url && link.url !== '#') || (link.linkType === 'internal' && link.internalPageId);
                     
                     if (link.linkType === 'internal' && link.internalPageId) {
                          href = '#';
                          onClick = \`onclick="window.switchPage('\${link.internalPageId}'); return false;"\`;
                     }
                     
-                    const finalStyle = \`style="color: \${link.style?.color || primaryColor}; text-decoration: underline; text-underline-offset: 4px; \${rawStyle}"\`;
+                    const baseColor = link.style?.color || primaryColor;
+                    const decoration = isRealLink ? 'text-decoration: underline; text-underline-offset: 4px;' : 'text-decoration: none;';
+                    const finalStyle = \`style="color: \${baseColor}; \${decoration} \${rawStyle}"\`;
+                    
+                    if (!isRealLink) {
+                        return \`<span \${finalStyle}>\${seg.text}</span>\`;
+                    }
                     
                     return \`<a href="\${href}" \${onClick} class="hover:opacity-70 transition-opacity" \${finalStyle}>\${seg.text}</a>\`;
                 }).join('');
@@ -385,12 +415,13 @@ const App: React.FC = () => {
                         <div class="flex flex-col lg:flex-row gap-16 items-start mb-28 p-8 rounded-3xl" style="background-color: \${primaryColor}08">
                             <img src="\${block.items[0]?.image}" class="w-64 h-80 object-cover shadow-xl border border-slate-100 p-1 bg-white rounded-2xl">
                             <div class="flex-1 space-y-6">
-                                <h1 class="text-3xl font-bold tracking-tight text-slate-900" style="border-left: 6px solid \${primaryColor}; padding-left: 1.5rem; \${getStyleAttr(block.title.style).replace('style="', '').replace('"', '')}">\${processText(block.title.text, block.title.inlineLinks)}</h1>
-                                <div class="text-lg leading-relaxed text-slate-700 font-medium" \${getStyleAttr(block.items[0]?.style)}>\${processText(block.items[0]?.text, block.items[0]?.inlineLinks)}</div>
-                                \${block.items[0]?.subtext ? \`<div class="text-base text-slate-500 italic opacity-80" style="white-space: pre-wrap;">\${processText(block.items[0]?.subtext, block.items[0]?.inlineLinks)}</div>\` : ''}
+                                <h1 class="text-3xl font-bold tracking-tight text-slate-900 content-text" style="border-left: 6px solid \${primaryColor}; padding-left: 1.5rem; \${getStyleAttr(block.title.style).replace('style="', '').replace('"', '')}">\${processText(block.title.text, block.title.inlineLinks)}</h1>
+                                <div class="text-lg leading-relaxed text-slate-700 font-medium content-text" \${getStyleAttr(block.items[0]?.style)}>\${processText(block.items[0]?.text, block.items[0]?.inlineLinks)}</div>
+                                \${block.items[0]?.subtext ? \`<div class="text-base text-slate-500 italic opacity-80 content-text" style="">\${processText(block.items[0]?.subtext, block.items[0]?.inlineLinks)}</div>\` : ''}
                             </div>
                         </div>\`;
                 } else if (block.type === 'contact-grid') {
+                    /* 修复图标显示问题 */
                     content = \`
                         <div class="mb-28">
                             <h2 class="text-2xl font-black mb-8 border-b border-slate-100 pb-2 flex items-center gap-4">
@@ -401,11 +432,13 @@ const App: React.FC = () => {
                                 \${block.items.map(item => \`
                                     <div class="p-6 bg-white border border-slate-100 rounded-[32px] flex flex-col items-center text-center gap-4 shadow-sm">
                                         <div class="w-14 h-14 rounded-2xl flex items-center justify-center bg-slate-50 border border-slate-50 p-2.5" style="border-color: \${primaryColor}40">
-                                            <div class="w-full h-full text-slate-600 font-black text-[10px]">\${item.icon === 'custom' && item.customIcon ? \`<img src="\${item.customIcon}" class="w-full h-full object-contain">\` : (item.icon || 'LINK')}</div>
+                                            <div class="w-full h-full text-slate-600 font-black text-[10px]">
+                                              \${item.icon === 'custom' && item.customIcon ? \`<img src="\${item.customIcon}" class="w-full h-full object-contain">\` : getIconSvg(item.icon)}
+                                            </div>
                                         </div>
                                         <div>
                                             <p class="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">\${processText(item.text, item.inlineLinks)}</p>
-                                            <p class="text-sm font-bold text-slate-800 break-all" \${getStyleAttr(item.style)}>\${processText(item.subtext, item.inlineLinks)}</p>
+                                            <p class="text-sm font-bold text-slate-800 break-all content-text" \${getStyleAttr(item.style)}>\${processText(item.subtext, item.inlineLinks)}</p>
                                         </div>
                                     </div>
                                 \`).join('')}
@@ -424,8 +457,8 @@ const App: React.FC = () => {
                                         \${item.date ? \`<div class="w-20 shrink-0 font-black text-slate-300 text-xl">\${item.date}</div>\` : ''}
                                         \${item.image ? \`<div class="w-32 h-32 shrink-0"><img src="\${item.image}" class="w-full h-full object-cover rounded-xl shadow-md"></div>\` : ''}
                                         <div class="flex-1">
-                                            <div class="text-xl font-bold text-slate-800" \${getStyleAttr(item.style)}>\${processText(item.text, item.inlineLinks)}</div>
-                                            <p class="text-base text-slate-500 mt-2 leading-relaxed font-medium" style="white-space: pre-wrap;">\${processText(item.subtext || '', item.inlineLinks)}</p>
+                                            <div class="text-xl font-bold text-slate-800 content-text" \${getStyleAttr(item.style)}>\${processText(item.text, item.inlineLinks)}</div>
+                                            <p class="text-base text-slate-500 mt-2 leading-relaxed font-medium content-text" style="">\${processText(item.subtext || '', item.inlineLinks)}</p>
                                         </div>
                                     </div>
                                 \`).join('')}
@@ -437,12 +470,13 @@ const App: React.FC = () => {
 
             const pageContent = activePage.layout.map(renderBlock).join('');
             
+            /* 修复头部布局：改为 flex-col 垂直排列 */
             root.innerHTML = \`
                 <div class="p-12 md:p-24 bg-white min-h-screen">
                     <div class="max-w-6xl mx-auto shadow-2xl rounded-[80px] border border-slate-100 p-12 md:p-24 bg-white theme-container">
-                        <header class="mb-32 flex flex-col md:flex-row md:items-end justify-between gap-12 pb-20 border-b-2 border-slate-100">
-                            <h1 class="text-7xl font-black tracking-tighter leading-none" \${getStyleAttr(profile.name.style)}>\${processText(profile.name.text, profile.name.inlineLinks)}</h1>
-                            <nav class="flex gap-12">
+                        <header class="mb-32 flex flex-col items-start gap-12 pb-20 border-b-2 border-slate-100">
+                            <h1 class="text-7xl font-black tracking-tighter leading-none content-text" \${getStyleAttr(profile.name.style)}>\${processText(profile.name.text, profile.name.inlineLinks)}</h1>
+                            <nav class="flex gap-12 flex-wrap">
                                 \${profile.pages.map(p => \`
                                     <button onclick="window.switchPage('\${p.id}')" class="text-xs font-black uppercase tracking-[0.4em] transition-all relative \${p.id === activePageId ? '' : 'opacity-20 hover:opacity-100'}" style="color: \${p.id === activePageId ? primaryColor : 'inherit'}">
                                         \${p.title}
