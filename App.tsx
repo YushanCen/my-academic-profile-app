@@ -249,7 +249,7 @@ const App: React.FC = () => {
     }
   };
 
-  // --- 关键修复：完全重写导出逻辑，使用配置表确保 1:1 还原 ---
+  // --- 导出逻辑：支持自定义字号覆盖默认字号 ---
   const exportForGithub = () => {
     const siteData = { profile, theme, primaryColor };
     
@@ -259,37 +259,41 @@ const App: React.FC = () => {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${profile.name.text} | Academic Homepage</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- 引入 Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=JetBrains+Mono&display=swap" rel="stylesheet">
     
     <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            fontFamily: {
-              sans: ['Inter', 'sans-serif'],
-              serif: ['Lora', 'serif'],
-              mono: ['JetBrains Mono', 'monospace'],
+      tailwind = {
+        config: {
+          theme: {
+            extend: {
+              fontFamily: {
+                sans: ['Inter', 'sans-serif'],
+                serif: ['Lora', 'serif'],
+                mono: ['JetBrains Mono', 'monospace'],
+              }
             }
-          }
-        },
-        /* Safelist：强制生成这些样式，解决动态类名失效问题 */
-        safelist: [
-          'text-xs', 'text-sm', 'text-base', 'text-lg', 'text-xl', 'text-2xl', 'text-3xl', 'text-4xl', 'text-5xl', 'text-6xl', 'text-7xl',
-          'font-serif', 'font-sans', 'font-mono', 'font-black', 'font-bold', 'font-normal', 'font-light',
-          'italic', 'tracking-tight', 'tracking-tighter', 'leading-none', 'uppercase', 'tracking-widest', 'tracking-[0.3em]', 'tracking-[0.6em]',
-          'p-24', 'p-20', 'p-16', 'p-12', 'p-10', 'p-8',
-          'rounded-[80px]', 'rounded-[48px]', 'rounded-[3rem]', 'rounded-none', 'rounded-2xl',
-          'border-t-[12px]', 'border-l-[32px]', 'border-b-[6px]', 'border-l-[8px]', 'border-l-[1px]', 'border-t-[20px]', 'border-b-4', 'border-b-2', 'border-b',
-          'shadow-2xl', 'shadow-sm', 'shadow-none',
-          'bg-[#f8f9fa]', 'bg-[#fffcf9]', 'bg-[#fdfbf7]', 'bg-white', 'bg-slate-50', 'bg-slate-100', 'bg-slate-800',
-          'max-w-7xl', 'border-x-[1px]', 'border-l-[12px]', 'border-l-4',
-          'flex-col', 'items-start', 'items-center', 'justify-center', 'justify-between', 'gap-8', 'gap-10', 'gap-12', 'gap-16'
-        ]
+          },
+          /* Safelist：确保这些类名一定会被生成 */
+          safelist: [
+            'text-xs', 'text-sm', 'text-base', 'text-lg', 'text-xl', 'text-2xl', 'text-3xl', 'text-4xl', 'text-5xl', 'text-6xl', 'text-7xl',
+            'font-serif', 'font-sans', 'font-mono', 'font-black', 'font-bold', 'font-normal', 'font-light',
+            'italic', 'tracking-tight', 'tracking-tighter', 'leading-none', 'uppercase', 'tracking-widest', 'tracking-[0.3em]', 'tracking-[0.6em]',
+            'p-24', 'p-20', 'p-16', 'p-12', 'p-10', 'p-8',
+            'rounded-[80px]', 'rounded-[48px]', 'rounded-[3rem]', 'rounded-none', 'rounded-2xl',
+            'border-t-[12px]', 'border-l-[32px]', 'border-b-[6px]', 'border-l-[8px]', 'border-l-[1px]', 'border-t-[20px]', 'border-b-4', 'border-b-2', 'border-b',
+            'shadow-2xl', 'shadow-sm', 'shadow-none',
+            'bg-[#f8f9fa]', 'bg-[#fffcf9]', 'bg-[#fdfbf7]', 'bg-white', 'bg-slate-50', 'bg-slate-100', 'bg-slate-800',
+            'max-w-7xl', 'border-x-[1px]', 'border-l-[12px]', 'border-l-4',
+            'flex-col', 'items-start', 'items-center', 'justify-center', 'justify-between', 'gap-8', 'gap-10', 'gap-12', 'gap-16'
+          ]
+        }
       }
     </script>
+    <script src="https://cdn.tailwindcss.com"></script>
 
     <style>
         /* CSS Reset & Defaults */
@@ -301,6 +305,18 @@ const App: React.FC = () => {
             margin: 0;
             line-height: 1.5;
         }
+        
+        /* 
+           修复方案：
+           这里定义默认样式，但去掉了 !important。
+           这样，如果用户在元素上内联了 style="font-size: 20px"，内联样式优先级更高，会覆盖这里的默认值。
+           如果用户没设置，就用这里的默认值。
+        */
+        .text-7xl { font-size: 4.5rem; line-height: 1; }
+        .text-6xl { font-size: 3.75rem; line-height: 1; }
+        .text-5xl { font-size: 3rem; line-height: 1; }
+        .text-4xl { font-size: 2.25rem; line-height: 2.5rem; }
+        
         .font-serif { font-family: 'Lora', serif !important; }
         .font-mono { font-family: 'JetBrains Mono', monospace !important; }
         .font-sans { font-family: 'Inter', sans-serif !important; }
@@ -333,7 +349,7 @@ const App: React.FC = () => {
               'mono': 'JetBrains Mono, monospace'
             };
 
-            /* === 终极主题配置表：确保导出和预览 1:1 一致 === */
+            /* === 终极主题配置表 === */
             const themeConfig = {
                 'theme-1': {
                     container: "bg-white p-24 rounded-[80px] shadow-2xl border-t-[12px]",
@@ -411,7 +427,10 @@ const App: React.FC = () => {
               if(s.fontWeight) styleStr += \`font-weight: \${s.fontWeight};\`;
               if(s.fontStyle) styleStr += \`font-style: \${s.fontStyle};\`; 
               if(s.color) styleStr += \`color: \${s.color};\`;
-              if(s.fontFamily && families[s.fontFamily]) styleStr += \`font-family: \${families[s.fontFamily]};\`;
+              
+              if(s.fontFamily && families[s.fontFamily]) {
+                  styleStr += \`font-family: \${families[s.fontFamily]};\`;
+              }
               if(s.lineHeight) styleStr += \`line-height: \${String(s.lineHeight).match(/^\\d+$/) && Number(s.lineHeight) > 4 ? s.lineHeight + 'px' : s.lineHeight};\`;
               
               styleStr += '"';
@@ -603,8 +622,9 @@ const App: React.FC = () => {
     URL.revokeObjectURL(url);
     setIsPublishDialogOpen(false);
   };
-  // ... rest of the code remains the same
   
+  // ... rest of component methods ...
+
   const addPage = () => {
     const newPage: PageData = { id: `p-${Date.now()}`, title: 'New Page', layout: [] };
     const next = { ...profile, pages: [...profile.pages, newPage] };
