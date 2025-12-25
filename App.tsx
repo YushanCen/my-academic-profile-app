@@ -249,7 +249,7 @@ const App: React.FC = () => {
     }
   };
 
-  // --- 导出逻辑：1:1 还原主题样式 ---
+  // --- 导出逻辑修复：确保标题样式被应用 ---
   const exportForGithub = () => {
     const siteData = { profile, theme, primaryColor };
     
@@ -313,7 +313,6 @@ const App: React.FC = () => {
               'mono': 'JetBrains Mono, monospace'
             };
 
-            /* === 样式辅助函数 === */
             const getThemeClass = (t) => {
                 const base = "w-full transition-all duration-700 min-h-[85vh] ";
                 switch (t) {
@@ -344,7 +343,6 @@ const App: React.FC = () => {
                 }
             };
 
-            /* 1:1 还原 AcademicTemplate 的标题样式逻辑 */
             const getSectionHeaderStyle = (t) => {
                 let s = "text-2xl font-black mb-8 tracking-tighter flex items-center gap-4 ";
                 if (t === 'theme-1') s += "border-b-4 border-slate-900 pb-2 uppercase text-slate-900";
@@ -448,7 +446,6 @@ const App: React.FC = () => {
                 const sectionHeaderClass = getSectionHeaderStyle(theme);
                 
                 if (block.type === 'bio-hero') {
-                    // 动态调整 Bio 部分的字体和排版
                     const bioTitleClass = theme === 'theme-1' ? 'text-4xl' : theme === 'theme-2' ? 'text-5xl font-serif italic' : theme === 'theme-5' ? 'text-6xl font-serif' : theme === 'theme-8' ? 'text-6xl font-black tracking-tighter leading-[1.05]' : 'text-3xl';
                     const bioBodyClass = theme === 'theme-2' || theme === 'theme-7' ? 'font-serif' : '';
                     
@@ -464,7 +461,7 @@ const App: React.FC = () => {
                 } else if (block.type === 'contact-grid') {
                     content = \`
                         <div class="mb-28">
-                            <h2 class="\${sectionHeaderClass}">
+                            <h2 class="\${sectionHeaderClass}" \${getStyleAttr(block.title.style)}>
                                 \${!['theme-1', 'theme-2', 'theme-3', 'theme-4', 'theme-5', 'theme-6', 'theme-7', 'theme-8'].includes(theme) ? \`<span class="w-1.5 h-6 rounded-sm" style="background-color: \${primaryColor}"></span>\` : ''}
                                 \${processText(block.title.text, block.title.inlineLinks)}
                             </h2>
@@ -488,7 +485,7 @@ const App: React.FC = () => {
                     const listItemClass = theme === 'theme-2' || theme === 'theme-7' ? 'font-serif text-2xl' : theme === 'theme-8' ? 'text-2xl tracking-tight' : 'text-xl font-bold';
                     content = \`
                         <div class="mb-28">
-                            <h2 class="\${sectionHeaderClass}">
+                            <h2 class="\${sectionHeaderClass}" \${getStyleAttr(block.title.style)}>
                                 \${!['theme-1', 'theme-2', 'theme-3', 'theme-4', 'theme-5', 'theme-6', 'theme-7', 'theme-8'].includes(theme) ? \`<span class="w-1.5 h-6 rounded-sm" style="background-color: \${primaryColor}"></span>\` : ''}
                                 \${processText(block.title.text, block.title.inlineLinks)}
                             </h2>
@@ -557,7 +554,8 @@ const App: React.FC = () => {
     URL.revokeObjectURL(url);
     setIsPublishDialogOpen(false);
   };
-  // -----------------------------------------------------
+  
+  // ... (rest of the component logic remains unchanged) ...
 
   const addPage = () => {
     const newPage: PageData = { id: `p-${Date.now()}`, title: 'New Page', layout: [] };
@@ -814,16 +812,12 @@ const App: React.FC = () => {
               <div className="space-y-2">
                 <label className="text-[10px] font-bold text-slate-400 uppercase">Typography & Content</label>
                 
-                {/* 字体选择独立一行，因为名字比较长 */}
                 <select className="w-full p-2 bg-slate-50 rounded-lg text-xs mb-2" value={item?.style?.fontFamily || 'sans'} onChange={e => updateByPath([...editingElement.path, 'style', 'fontFamily'], e.target.value)}>
                   {FONTS.map(f => <option key={f.key} value={f.key}>{f.name}</option>)}
                 </select>
 
                 <div className="grid grid-cols-2 gap-3">
-                  {/* 字体大小 */}
                   <input type="text" placeholder="Size (e.g. 15)" className="w-full p-2 bg-slate-50 rounded-lg text-xs" value={item?.style?.fontSize || ''} onChange={e => updateByPath([...editingElement.path, 'style', 'fontSize'], e.target.value)} />
-                  
-                  {/* 行距 (Line Height) - 新增功能 */}
                   <input type="text" placeholder="Line Height (e.g. 1.6)" className="w-full p-2 bg-slate-50 rounded-lg text-xs" value={item?.style?.lineHeight || ''} onChange={e => updateByPath([...editingElement.path, 'style', 'lineHeight'], e.target.value)} />
                 </div>
                 
@@ -856,7 +850,6 @@ const App: React.FC = () => {
                    </div>
                 )}
 
-                {/* Dimension Control for Photo-heavy blocks like group-photo */}
                 {(editingElement.type === 'photo' || editingElement.type === 'item' || editingElement.type === 'member') && getParentBlockPath() && (() => {
                   const parts = editingElement.path;
                   const blockIdx = parts.indexOf('layout') + 1;
