@@ -249,7 +249,7 @@ const App: React.FC = () => {
     }
   };
 
-  // --- 关键修复：智能对齐转换 (text-align -> justify-content) ---
+  // --- 导出逻辑：1:1 还原主题样式 ---
   const exportForGithub = () => {
     const siteData = { profile, theme, primaryColor };
     
@@ -259,56 +259,27 @@ const App: React.FC = () => {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${profile.name.text} | Academic Homepage</title>
-    
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=JetBrains+Mono&display=swap" rel="stylesheet">
     
     <script>
-      tailwind = {
-        config: {
-          theme: {
-            extend: {
-              fontFamily: {
-                sans: ['Inter', 'sans-serif'],
-                serif: ['Lora', 'serif'],
-                mono: ['JetBrains Mono', 'monospace'],
-              }
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+              serif: ['Lora', 'serif'],
+              mono: ['JetBrains Mono', 'monospace'],
             }
-          },
-          safelist: [
-            'text-xs', 'text-sm', 'text-base', 'text-lg', 'text-xl', 'text-2xl', 'text-3xl', 'text-4xl', 'text-5xl', 'text-6xl', 'text-7xl',
-            'font-serif', 'font-sans', 'font-mono', 'font-black', 'font-bold', 'font-normal', 'font-light',
-            'italic', 'tracking-tight', 'tracking-tighter', 'leading-none', 'uppercase', 'tracking-widest', 'tracking-[0.3em]', 'tracking-[0.6em]',
-            'p-24', 'p-20', 'p-16', 'p-12', 'p-10', 'p-8',
-            'rounded-[80px]', 'rounded-[48px]', 'rounded-[3rem]', 'rounded-none', 'rounded-2xl',
-            'border-t-[12px]', 'border-l-[32px]', 'border-b-[6px]', 'border-l-[8px]', 'border-l-[1px]', 'border-t-[20px]', 'border-b-4', 'border-b-2', 'border-b',
-            'shadow-2xl', 'shadow-sm', 'shadow-none',
-            'bg-[#f8f9fa]', 'bg-[#fffcf9]', 'bg-[#fdfbf7]', 'bg-white', 'bg-slate-50', 'bg-slate-100', 'bg-slate-800',
-            'max-w-7xl', 'border-x-[1px]', 'border-l-[12px]', 'border-l-4',
-            'flex-col', 'items-start', 'items-center', 'justify-center', 'justify-between', 'justify-end', 'gap-8', 'gap-10', 'gap-12', 'gap-16',
-            'text-center', 'text-left', 'text-right'
-          ]
+          }
         }
       }
     </script>
-    <script src="https://cdn.tailwindcss.com"></script>
 
     <style>
-        *, ::before, ::after { box-sizing: border-box; }
-        body { 
-            font-family: 'Inter', sans-serif; 
-            background-color: #f8fafc; 
-            color: #0f172a; 
-            margin: 0;
-            line-height: 1.5;
-        }
-        
-        .text-7xl { font-size: 4.5rem; line-height: 1; }
-        .text-6xl { font-size: 3.75rem; line-height: 1; }
-        .text-5xl { font-size: 3rem; line-height: 1; }
-        .text-4xl { font-size: 2.25rem; line-height: 2.5rem; }
-        
+        body { background-color: #f8fafc; color: #0f172a; }
         .font-serif { font-family: 'Lora', serif !important; }
         .font-mono { font-family: 'JetBrains Mono', monospace !important; }
         .font-sans { font-family: 'Inter', sans-serif !important; }
@@ -322,7 +293,7 @@ const App: React.FC = () => {
         a { text-decoration: none; color: inherit; }
     </style>
 </head>
-<body class="font-sans antialiased text-slate-900">
+<body class="antialiased text-slate-900">
     <div id="render-root"></div>
     <script type="module">
         const data = ${JSON.stringify(siteData)};
@@ -332,6 +303,7 @@ const App: React.FC = () => {
         function render() {
             const root = document.getElementById('render-root');
             const activePage = profile.pages.find(p => p.id === activePageId) || profile.pages[0];
+            const themeColors = profile.themeSettings?.[theme] || {};
             
             const families = {
               'sans': 'Inter, sans-serif',
@@ -341,97 +313,60 @@ const App: React.FC = () => {
               'mono': 'JetBrains Mono, monospace'
             };
 
-            const themeConfig = {
-                'theme-1': {
-                    container: "bg-white p-24 rounded-[80px] shadow-2xl border-t-[12px]",
-                    header: "mb-32 flex flex-col items-start gap-8 pb-20 border-b-2 border-slate-100",
-                    name: "text-7xl font-black tracking-tighter leading-none text-slate-900",
-                    navAlign: "justify-start",
-                    sectionHeader: "text-2xl font-black mb-8 tracking-tighter flex items-center gap-4 border-b-4 border-slate-900 pb-2 uppercase text-slate-900",
-                    bioTitle: "text-4xl"
-                },
-                'theme-2': {
-                    container: "bg-white p-20 border border-slate-100 shadow-none font-serif",
-                    header: "mb-32 flex flex-col items-center text-center gap-12 pb-20 border-b border-slate-100",
-                    name: "font-serif italic text-6xl text-center leading-none text-slate-900",
-                    navAlign: "justify-center",
-                    sectionHeader: "text-2xl font-black mb-8 tracking-tighter flex items-center gap-4 font-serif italic border-b border-slate-200 pb-1 text-3xl justify-center text-slate-800",
-                    bioTitle: "text-5xl font-serif italic text-center"
-                },
-                'theme-3': {
-                    container: "bg-[#f8f9fa] p-24 border-l-[32px]",
-                    header: "mb-32 bg-white p-12 -mx-24 -mt-24 shadow-sm flex flex-col gap-10 items-start",
-                    name: "text-7xl font-black tracking-tighter leading-none text-slate-900",
-                    navAlign: "justify-start",
-                    sectionHeader: "text-2xl font-black mb-8 tracking-tighter flex items-center gap-4 bg-slate-800 text-white px-6 py-3 rounded-r-lg -ml-24 shadow-md w-fit",
-                    bioTitle: "text-3xl"
-                },
-                'theme-4': {
-                    container: "bg-slate-50 p-16 rounded-[48px] shadow-sm",
-                    header: "mb-20 flex flex-col gap-10 items-start bg-white/80 backdrop-blur p-8 rounded-3xl shadow-sm sticky top-0 z-50",
-                    name: "text-7xl font-black tracking-tighter leading-none text-slate-900",
-                    navAlign: "justify-start",
-                    sectionHeader: "text-slate-900/40 uppercase tracking-[0.3em] text-xs font-black border-none flex items-center gap-4 mb-8",
-                    bioTitle: "text-3xl"
-                },
-                'theme-5': {
-                    container: "bg-white p-24 border-x-[1px] border-slate-200 max-w-7xl mx-auto shadow-sm",
-                    header: "mb-32 flex flex-col items-start gap-12 pb-20 border-b-[6px] border-slate-900",
-                    name: "font-serif text-5xl italic leading-none text-slate-900",
-                    navAlign: "justify-start",
-                    sectionHeader: "text-4xl font-serif text-slate-900 border-l-[12px] pl-6 flex items-center gap-4 mb-8",
-                    bioTitle: "text-6xl font-serif"
-                },
-                'theme-6': {
-                    container: "bg-[#fffcf9] p-20 shadow-sm border-t-[8px]",
-                    header: "mb-32 flex flex-col gap-10 items-start pb-12 border-b-2 border-slate-900",
-                    name: "text-7xl font-black tracking-tighter leading-none text-slate-900",
-                    navAlign: "justify-start",
-                    sectionHeader: "bg-slate-100 text-slate-900 px-4 py-1 text-lg uppercase tracking-widest border-l-4 border-slate-900 flex items-center gap-4 mb-8",
-                    bioTitle: "text-3xl"
-                },
-                'theme-7': {
-                    container: "bg-[#fdfbf7] p-24 font-serif text-slate-900",
-                    header: "mb-32 flex flex-col gap-16 border-l-[1px] border-slate-900 pl-12 items-start",
-                    name: "font-serif italic text-6xl text-center leading-none text-slate-900",
-                    navAlign: "justify-start",
-                    sectionHeader: "text-5xl font-serif font-light italic border-b-[1px] border-slate-900/20 w-full pb-4 flex items-center gap-4 mb-8",
-                    bioTitle: "text-3xl font-serif"
-                },
-                'theme-8': {
-                    container: "bg-white p-12 md:p-20 shadow-sm rounded-none font-sans border-t-[20px]",
-                    header: "mb-32 flex flex-col justify-between items-start gap-12 pb-16 border-b border-slate-100",
-                    name: "text-6xl tracking-[-0.05em] text-slate-900 font-black leading-none",
-                    navAlign: "justify-start",
-                    sectionHeader: "text-xs font-black uppercase tracking-[0.6em] text-slate-400 mb-10 w-full flex items-center gap-6 after:content-[''] after:h-[1px] after:flex-1 after:bg-slate-100",
-                    bioTitle: "text-6xl font-black tracking-tighter leading-[1.05]"
+            /* === 样式辅助函数 === */
+            const getThemeClass = (t) => {
+                const base = "w-full transition-all duration-700 min-h-[85vh] ";
+                switch (t) {
+                  case 'theme-1': return base + "bg-white p-24 rounded-[80px] shadow-2xl border-t-[12px]";
+                  case 'theme-2': return base + "bg-white p-20 border border-slate-100 shadow-none font-serif";
+                  case 'theme-3': return base + "bg-[#f8f9fa] p-24 border-l-[32px]";
+                  case 'theme-4': return base + "bg-slate-50 p-16 rounded-[48px] shadow-sm";
+                  case 'theme-5': return base + "bg-white p-24 border-x-[1px] border-slate-200 max-w-7xl mx-auto shadow-sm";
+                  case 'theme-6': return base + "bg-[#fffcf9] p-20 shadow-sm border-t-[8px]";
+                  case 'theme-7': return base + "bg-[#fdfbf7] p-24 font-serif text-slate-900";
+                  case 'theme-8': return base + "bg-white p-12 md:p-20 shadow-sm rounded-none font-sans border-t-[20px]";
+                  default: return base + "bg-white p-24";
                 }
             };
 
-            const currentConfig = themeConfig[theme] || themeConfig['theme-1'];
+            const getHeaderClass = (t) => {
+                const baseClass = "mb-32 flex flex-col gap-8 ";
+                switch(t) {
+                  case 'theme-1': return baseClass + "items-start pb-20 border-b-2 border-slate-100";
+                  case 'theme-2': return "mb-32 flex flex-col items-center text-center gap-12 pb-20 border-b border-slate-100";
+                  case 'theme-3': return "mb-32 bg-white p-12 -mx-24 -mt-24 shadow-sm flex flex-col gap-10 items-start";
+                  case 'theme-4': return "mb-20 flex flex-col gap-10 items-start bg-white/80 backdrop-blur p-8 rounded-3xl shadow-sm sticky top-0 z-50";
+                  case 'theme-5': return "mb-32 flex flex-col items-start gap-12 pb-20 border-b-[6px] border-slate-900";
+                  case 'theme-6': return "mb-32 flex flex-col gap-10 items-start pb-12 border-b-2 border-slate-900";
+                  case 'theme-7': return "mb-32 flex flex-col gap-16 border-l-[1px] border-slate-900 pl-12 items-start";
+                  case 'theme-8': return "mb-32 flex flex-col justify-between items-start gap-12 pb-16 border-b border-slate-100";
+                  default: return "mb-32 flex flex-col gap-12 items-start";
+                }
+            };
+
+            /* 1:1 还原 AcademicTemplate 的标题样式逻辑 */
+            const getSectionHeaderStyle = (t) => {
+                let s = "text-2xl font-black mb-8 tracking-tighter flex items-center gap-4 ";
+                if (t === 'theme-1') s += "border-b-4 border-slate-900 pb-2 uppercase text-slate-900";
+                else if (t === 'theme-2') s += "font-serif italic border-b border-slate-200 pb-1 text-3xl justify-center text-slate-800";
+                else if (t === 'theme-3') s += "bg-slate-800 text-white px-6 py-3 rounded-r-lg -ml-24 shadow-md w-fit";
+                else if (t === 'theme-4') s += "text-slate-900/40 uppercase tracking-[0.3em] text-xs font-black border-none";
+                else if (t === 'theme-5') s += "text-4xl font-serif text-slate-900 border-l-[12px] pl-6";
+                else if (t === 'theme-6') s += "bg-slate-100 text-slate-900 px-4 py-1 text-lg uppercase tracking-widest border-l-4 border-slate-900";
+                else if (t === 'theme-7') s += "text-5xl font-serif font-light italic border-b-[1px] border-slate-900/20 w-full pb-4";
+                else if (t === 'theme-8') s = "text-xs font-black uppercase tracking-[0.6em] text-slate-400 mb-10 w-full flex items-center gap-6 after:content-[''] after:h-[1px] after:flex-1 after:bg-slate-100";
+                return s;
+            };
 
             const getStyleAttr = (s) => {
               if(!s) return 'style="white-space: pre-wrap;"';
               let styleStr = 'style="white-space: pre-wrap; ';
-              
               if(s.fontSize) styleStr += \`font-size: \${String(s.fontSize).match(/^\\d+$/) ? s.fontSize + 'px' : s.fontSize};\`;
               if(s.fontWeight) styleStr += \`font-weight: \${s.fontWeight};\`;
               if(s.fontStyle) styleStr += \`font-style: \${s.fontStyle};\`; 
               if(s.color) styleStr += \`color: \${s.color};\`;
-              
-              if(s.fontFamily && families[s.fontFamily]) {
-                  styleStr += \`font-family: \${families[s.fontFamily]};\`;
-              }
+              if(s.fontFamily && families[s.fontFamily]) styleStr += \`font-family: \${families[s.fontFamily]};\`;
               if(s.lineHeight) styleStr += \`line-height: \${String(s.lineHeight).match(/^\\d+$/) && Number(s.lineHeight) > 4 ? s.lineHeight + 'px' : s.lineHeight};\`;
-              
-              // 关键修复：如果用户设置了对齐，同时应用 justify-content 以兼容 Flex 布局
-              if(s.textAlign) {
-                 styleStr += \`text-align: \${s.textAlign};\`;
-                 if(s.textAlign === 'center') styleStr += 'justify-content: center;';
-                 else if(s.textAlign === 'right') styleStr += 'justify-content: flex-end;';
-                 else styleStr += 'justify-content: flex-start;';
-              }
-
               styleStr += '"';
               return styleStr;
             };
@@ -510,10 +445,11 @@ const App: React.FC = () => {
             const renderBlock = (block) => {
                 let content = '';
                 const widthClass = block.layoutConfig?.width === 'narrow' ? 'max-w-3xl' : block.layoutConfig?.width === 'medium' ? 'max-w-4xl' : 'max-w-6xl';
-                const sectionHeaderClass = currentConfig.sectionHeader;
+                const sectionHeaderClass = getSectionHeaderStyle(theme);
                 
                 if (block.type === 'bio-hero') {
-                    const bioTitleClass = currentConfig.bioTitle;
+                    // 动态调整 Bio 部分的字体和排版
+                    const bioTitleClass = theme === 'theme-1' ? 'text-4xl' : theme === 'theme-2' ? 'text-5xl font-serif italic' : theme === 'theme-5' ? 'text-6xl font-serif' : theme === 'theme-8' ? 'text-6xl font-black tracking-tighter leading-[1.05]' : 'text-3xl';
                     const bioBodyClass = theme === 'theme-2' || theme === 'theme-7' ? 'font-serif' : '';
                     
                     content = \`
@@ -528,7 +464,7 @@ const App: React.FC = () => {
                 } else if (block.type === 'contact-grid') {
                     content = \`
                         <div class="mb-28">
-                            <h2 class="\${sectionHeaderClass}" \${getStyleAttr(block.title.style)}>
+                            <h2 class="\${sectionHeaderClass}">
                                 \${!['theme-1', 'theme-2', 'theme-3', 'theme-4', 'theme-5', 'theme-6', 'theme-7', 'theme-8'].includes(theme) ? \`<span class="w-1.5 h-6 rounded-sm" style="background-color: \${primaryColor}"></span>\` : ''}
                                 \${processText(block.title.text, block.title.inlineLinks)}
                             </h2>
@@ -552,7 +488,7 @@ const App: React.FC = () => {
                     const listItemClass = theme === 'theme-2' || theme === 'theme-7' ? 'font-serif text-2xl' : theme === 'theme-8' ? 'text-2xl tracking-tight' : 'text-xl font-bold';
                     content = \`
                         <div class="mb-28">
-                            <h2 class="\${sectionHeaderClass}" \${getStyleAttr(block.title.style)}>
+                            <h2 class="\${sectionHeaderClass}">
                                 \${!['theme-1', 'theme-2', 'theme-3', 'theme-4', 'theme-5', 'theme-6', 'theme-7', 'theme-8'].includes(theme) ? \`<span class="w-1.5 h-6 rounded-sm" style="background-color: \${primaryColor}"></span>\` : ''}
                                 \${processText(block.title.text, block.title.inlineLinks)}
                             </h2>
@@ -577,11 +513,11 @@ const App: React.FC = () => {
             
             root.innerHTML = \`
                 <div class="p-12 md:p-24 bg-white min-h-screen">
-                    <div class="max-w-6xl mx-auto \${currentConfig.container} theme-container">
-                        <header class="\${currentConfig.header}">
+                    <div class="max-w-6xl mx-auto \${getThemeClass(theme)} theme-container">
+                        <header class="\${getHeaderClass(theme)}">
                             <div class="flex flex-col gap-10 w-full \${theme === 'theme-2' ? 'items-center' : 'items-start'}">
-                                <h1 class="\${currentConfig.name} content-text" \${getStyleAttr(profile.name.style)}>\${processText(profile.name.text, profile.name.inlineLinks)}</h1>
-                                <nav class="flex flex-wrap \${currentConfig.navAlign} \${['theme-2', 'theme-5', 'theme-7', 'theme-8'].includes(theme) ? 'gap-16' : 'gap-12'} w-full">
+                                <h1 class="text-7xl font-black tracking-tighter leading-none content-text \${theme === 'theme-2' || theme === 'theme-7' ? 'font-serif italic text-6xl text-center' : theme === 'theme-5' ? 'font-serif text-5xl italic' : ''}" \${getStyleAttr(profile.name.style)}>\${processText(profile.name.text, profile.name.inlineLinks)}</h1>
+                                <nav class="flex flex-wrap \${theme === 'theme-2' ? 'justify-center' : 'justify-start'} \${['theme-2', 'theme-5', 'theme-7', 'theme-8'].includes(theme) ? 'gap-16' : 'gap-12'} w-full">
                                     \${profile.pages.map(p => \`
                                         <button onclick="window.switchPage('\${p.id}')" class="text-xs font-black uppercase tracking-[0.4em] transition-all relative py-2 \${p.id === activePageId ? '' : 'opacity-20 hover:opacity-100'}" style="color: \${p.id === activePageId ? primaryColor : 'inherit'}">
                                             \${p.title}
@@ -621,9 +557,8 @@ const App: React.FC = () => {
     URL.revokeObjectURL(url);
     setIsPublishDialogOpen(false);
   };
-  
-  // ... rest of logic unchanged
-  
+  // -----------------------------------------------------
+
   const addPage = () => {
     const newPage: PageData = { id: `p-${Date.now()}`, title: 'New Page', layout: [] };
     const next = { ...profile, pages: [...profile.pages, newPage] };
@@ -1276,4 +1211,114 @@ const App: React.FC = () => {
             <h2 className="text-3xl font-black mb-2 tracking-tighter text-slate-900">Download for GitHub</h2>
             <p className="text-slate-500 text-sm mb-8 font-medium leading-relaxed">Download a functional <span className="font-bold">index.html</span> file that you can host on GitHub Pages to launch your academic portal immediately.</p>
             
-            <div className={`
+            <div className={`flex items-center gap-2 p-5 bg-slate-50 rounded-2xl border border-slate-100 mb-8`}>
+              <input 
+                className="bg-transparent flex-1 font-bold text-slate-900 outline-none text-lg" 
+                value={publishSubdomain} 
+                onChange={e => setPublishSubdomain(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))} 
+                placeholder="my-domain" 
+                autoFocus
+              />
+              <span className="text-slate-400 font-bold">.github.io</span>
+            </div>
+
+            <div className="flex gap-4">
+              <button 
+                onClick={() => setIsPublishDialogOpen(false)} 
+                className="flex-1 py-4 bg-slate-100 text-slate-400 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] hover:bg-slate-200 transition-all"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={exportForGithub} 
+                className="flex-[2] py-4 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2"
+              >
+                Download index.html
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="flex-1 flex overflow-hidden">
+        <aside className="w-72 bg-white border-r border-slate-200 p-6 space-y-8 overflow-y-auto custom-scrollbar">
+          <section>
+            <h3 className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-4">Aesthetics</h3>
+            <div className="grid grid-cols-2 gap-2 mb-4">
+              {THEME_LIST.map(t => (
+                <button key={t.id} onClick={() => setTheme(t.id as ThemeType)} className={`px-3 py-4 rounded-xl text-[9px] font-black uppercase border transition-all ${theme === t.id ? 'bg-[#9B89B3] text-white shadow-lg border-[#9B89B3]' : 'bg-white text-slate-400 border-slate-100 hover:border-[#9B89B3]/30'}`}>
+                  {t.name}
+                </button>
+              ))}
+            </div>
+            <button onClick={() => setEditingElement({ type: 'theme-color', path: [] })} className="w-full py-2 bg-slate-50 text-slate-500 text-[9px] font-black uppercase rounded-lg border-2 border-dashed hover:bg-slate-100 transition-colors">Theme Colors</button>
+          </section>
+
+          <section>
+            <h3 className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-4">Layer Stack</h3>
+            <div className="space-y-2">
+              {activePage.layout.map((b, idx) => (
+                <div key={b.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl group border border-transparent hover:border-[#9B89B3]/20 transition-all">
+                  <span className="text-[9px] font-black text-slate-500 uppercase truncate max-w-[90px]">{b.type}</span>
+                  <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button onClick={() => setEditingElement({ type: 'block-config', path: ['pages', profile.pages.findIndex(p => p.id === activePageId).toString(), 'layout', idx.toString()] })} className="text-[8px] font-black text-[#9B89B3] hover:brightness-75">EDIT</button>
+                    <div className="flex items-center gap-1">
+                      <button onClick={() => moveBlock(idx, 'up')} className="text-slate-400 hover:text-slate-900">▴</button>
+                      <button onClick={() => moveBlock(idx, 'down')} className="text-slate-400 hover:text-slate-900">▾</button>
+                      <button onClick={() => deleteBlock(b.id)} className="text-red-300 hover:text-red-500 ml-1">✕</button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              <div className="pt-2">
+                <select onChange={e => { if (e.target.value) { addBlock(e.target.value as BlockType); e.target.value = ""; } }} className="w-full py-3 bg-[#9B89B3] text-white rounded-xl text-[9px] font-black uppercase text-center focus:outline-none cursor-pointer hover:brightness-110 transition-all shadow-md">
+                  <option value="">+ ADD COMPONENT</option>
+                  <optgroup label="Research & Team">
+                    <option value="bio-hero">Individual Profile</option>
+                    <option value="lab-team">Team Grid (Members)</option>
+                    <option value="group-photo">Group Image / Photo Grid</option>
+                    <option value="group-summary">Group Overview</option>
+                  </optgroup>
+                  <optgroup label="Academic Content">
+                    <option value="education-employment">Education & Employment</option>
+                    <option value="publications">Publications</option>
+                    <option value="funding">Funding / Grants</option>
+                    <option value="resources">Datasets & Code</option>
+                  </optgroup>
+                  <optgroup label="Service">
+                    <option value="activities">Activities & Service</option>
+                    <option value="editorial-services">Editorial Roles</option>
+                    <option value="impact-outreach">Impact & Outreach</option>
+                  </optgroup>
+                  <optgroup label="Misc">
+                    <option value="technical-skills">Technical Skills</option>
+                    <option value="join-lab">Join the Lab</option>
+                    <option value="contact-grid">Contact Section</option>
+                    <option value="custom">Custom Section</option>
+                  </optgroup>
+                </select>
+              </div>
+            </div>
+          </section>
+        </aside>
+
+        <main className="flex-1 overflow-y-auto p-12 bg-[#f8fafc] flex justify-center custom-scrollbar">
+          <div className="w-full max-w-6xl animate-in fade-in slide-in-from-bottom-10 duration-700">
+             <AcademicTemplate 
+                data={profile}
+                activePageId={activePageId}
+                setActivePageId={setActivePageId}
+                theme={theme}
+                primaryColor={primaryColor}
+                onSelectElement={setEditingElement}
+                searchQuery={searchQuery}
+             />
+          </div>
+        </main>
+      </div>
+      {renderInspector()}
+    </div>
+  );
+};
+
+export default App;
