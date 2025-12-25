@@ -29,7 +29,7 @@ const App: React.FC = () => {
   const [editingElement, setEditingElement] = useState<{ type: string; path: string[] } | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   
-  // History management for Undo/Redo
+  // History management
   const [history, setHistory] = useState<AcademicProfile[]>([INITIAL_DATA]);
   const [historyIndex, setHistoryIndex] = useState(0);
 
@@ -249,7 +249,7 @@ const App: React.FC = () => {
     }
   };
 
-  // --- 导出逻辑 (已修复：动态主题、图标、布局) ---
+  // --- 导出逻辑：1:1 还原主题样式 ---
   const exportForGithub = () => {
     const siteData = { profile, theme, primaryColor };
     
@@ -279,13 +279,10 @@ const App: React.FC = () => {
     </script>
 
     <style>
-        body { 
-            font-family: 'Inter', sans-serif; 
-            background-color: #f8fafc; 
-            color: #0f172a; 
-        }
+        body { background-color: #f8fafc; color: #0f172a; }
         .font-serif { font-family: 'Lora', serif !important; }
         .font-mono { font-family: 'JetBrains Mono', monospace !important; }
+        .font-sans { font-family: 'Inter', sans-serif !important; }
         
         .content-text {
             white-space: pre-wrap !important;
@@ -296,7 +293,7 @@ const App: React.FC = () => {
         a { text-decoration: none; color: inherit; }
     </style>
 </head>
-<body class="font-sans antialiased text-slate-900">
+<body class="antialiased text-slate-900">
     <div id="render-root"></div>
     <script type="module">
         const data = ${JSON.stringify(siteData)};
@@ -316,6 +313,7 @@ const App: React.FC = () => {
               'mono': 'JetBrains Mono, monospace'
             };
 
+            /* === 样式辅助函数 === */
             const getThemeClass = (t) => {
                 const base = "w-full transition-all duration-700 min-h-[85vh] ";
                 switch (t) {
@@ -344,6 +342,20 @@ const App: React.FC = () => {
                   case 'theme-8': return "mb-32 flex flex-col justify-between items-start gap-12 pb-16 border-b border-slate-100";
                   default: return "mb-32 flex flex-col gap-12 items-start";
                 }
+            };
+
+            /* 1:1 还原 AcademicTemplate 的标题样式逻辑 */
+            const getSectionHeaderStyle = (t) => {
+                let s = "text-2xl font-black mb-8 tracking-tighter flex items-center gap-4 ";
+                if (t === 'theme-1') s += "border-b-4 border-slate-900 pb-2 uppercase text-slate-900";
+                else if (t === 'theme-2') s += "font-serif italic border-b border-slate-200 pb-1 text-3xl justify-center text-slate-800";
+                else if (t === 'theme-3') s += "bg-slate-800 text-white px-6 py-3 rounded-r-lg -ml-24 shadow-md w-fit";
+                else if (t === 'theme-4') s += "text-slate-900/40 uppercase tracking-[0.3em] text-xs font-black border-none";
+                else if (t === 'theme-5') s += "text-4xl font-serif text-slate-900 border-l-[12px] pl-6";
+                else if (t === 'theme-6') s += "bg-slate-100 text-slate-900 px-4 py-1 text-lg uppercase tracking-widest border-l-4 border-slate-900";
+                else if (t === 'theme-7') s += "text-5xl font-serif font-light italic border-b-[1px] border-slate-900/20 w-full pb-4";
+                else if (t === 'theme-8') s = "text-xs font-black uppercase tracking-[0.6em] text-slate-400 mb-10 w-full flex items-center gap-6 after:content-[''] after:h-[1px] after:flex-1 after:bg-slate-100";
+                return s;
             };
 
             const getStyleAttr = (s) => {
@@ -433,22 +445,27 @@ const App: React.FC = () => {
             const renderBlock = (block) => {
                 let content = '';
                 const widthClass = block.layoutConfig?.width === 'narrow' ? 'max-w-3xl' : block.layoutConfig?.width === 'medium' ? 'max-w-4xl' : 'max-w-6xl';
+                const sectionHeaderClass = getSectionHeaderStyle(theme);
                 
                 if (block.type === 'bio-hero') {
+                    // 动态调整 Bio 部分的字体和排版
+                    const bioTitleClass = theme === 'theme-1' ? 'text-4xl' : theme === 'theme-2' ? 'text-5xl font-serif italic' : theme === 'theme-5' ? 'text-6xl font-serif' : theme === 'theme-8' ? 'text-6xl font-black tracking-tighter leading-[1.05]' : 'text-3xl';
+                    const bioBodyClass = theme === 'theme-2' || theme === 'theme-7' ? 'font-serif' : '';
+                    
                     content = \`
-                        <div class="flex flex-col lg:flex-row gap-16 items-start mb-28 p-8 rounded-3xl" style="background-color: \${primaryColor}08">
-                            <img src="\${block.items[0]?.image}" class="w-64 h-80 object-cover shadow-xl border border-slate-100 p-1 bg-white rounded-2xl">
+                        <div class="flex flex-col lg:flex-row gap-16 items-start mb-28 \${theme === 'theme-1' ? 'p-10 border-l-[8px]' : theme === 'theme-2' ? 'p-0 text-center items-center' : theme === 'theme-3' ? 'p-8 bg-white shadow-sm' : ''}" style="\${theme === 'theme-1' ? 'border-left-color:' + primaryColor : ''}">
+                            <img src="\${block.items[0]?.image}" class="w-64 h-80 object-cover shadow-xl border border-slate-100 p-1 bg-white \${theme === 'theme-4' ? 'rounded-[3rem]' : 'rounded-2xl'}">
                             <div class="flex-1 space-y-6">
-                                <h1 class="text-3xl font-bold tracking-tight text-slate-900 content-text" style="border-left: 6px solid \${primaryColor}; padding-left: 1.5rem; \${getStyleAttr(block.title.style).replace('style="', '').replace('"', '')}">\${processText(block.title.text, block.title.inlineLinks)}</h1>
-                                <div class="text-lg leading-relaxed text-slate-700 font-medium content-text" \${getStyleAttr(block.items[0]?.style)}>\${processText(block.items[0]?.text, block.items[0]?.inlineLinks)}</div>
+                                <h1 class="\${bioTitleClass} tracking-tight text-slate-900 content-text" \${getStyleAttr(block.title.style)}>\${processText(block.title.text, block.title.inlineLinks)}</h1>
+                                <div class="text-lg leading-relaxed text-slate-700 font-medium content-text \${bioBodyClass}" \${getStyleAttr(block.items[0]?.style)}>\${processText(block.items[0]?.text, block.items[0]?.inlineLinks)}</div>
                                 \${block.items[0]?.subtext ? \`<div class="text-base text-slate-500 italic opacity-80 content-text" style="">\${processText(block.items[0]?.subtext, block.items[0]?.inlineLinks)}</div>\` : ''}
                             </div>
                         </div>\`;
                 } else if (block.type === 'contact-grid') {
                     content = \`
                         <div class="mb-28">
-                            <h2 class="text-2xl font-black mb-8 border-b border-slate-100 pb-2 flex items-center gap-4">
-                                <span class="w-1.5 h-6 rounded-sm" style="background-color: \${primaryColor}"></span>
+                            <h2 class="\${sectionHeaderClass}">
+                                \${!['theme-1', 'theme-2', 'theme-3', 'theme-4', 'theme-5', 'theme-6', 'theme-7', 'theme-8'].includes(theme) ? \`<span class="w-1.5 h-6 rounded-sm" style="background-color: \${primaryColor}"></span>\` : ''}
                                 \${processText(block.title.text, block.title.inlineLinks)}
                             </h2>
                             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -468,19 +485,20 @@ const App: React.FC = () => {
                             </div>
                         </div>\`;
                 } else {
+                    const listItemClass = theme === 'theme-2' || theme === 'theme-7' ? 'font-serif text-2xl' : theme === 'theme-8' ? 'text-2xl tracking-tight' : 'text-xl font-bold';
                     content = \`
                         <div class="mb-28">
-                            <h2 class="text-2xl font-black mb-8 border-b border-slate-100 pb-2 flex items-center gap-4">
-                                <span class="w-1.5 h-6 rounded-sm" style="background-color: \${primaryColor}"></span>
+                            <h2 class="\${sectionHeaderClass}">
+                                \${!['theme-1', 'theme-2', 'theme-3', 'theme-4', 'theme-5', 'theme-6', 'theme-7', 'theme-8'].includes(theme) ? \`<span class="w-1.5 h-6 rounded-sm" style="background-color: \${primaryColor}"></span>\` : ''}
                                 \${processText(block.title.text, block.title.inlineLinks)}
                             </h2>
                             <div class="space-y-10">
                                 \${block.items.map(item => \`
-                                    <div class="pb-10 border-b border-slate-100 flex flex-col md:flex-row gap-6 md:gap-16 last:border-0">
+                                    <div class="pb-10 border-b border-slate-100 flex flex-col md:flex-row gap-6 md:gap-16 last:border-0 \${theme === 'theme-3' ? 'p-8 bg-white mb-4 border-none shadow-sm rounded-lg' : ''}">
                                         \${item.date ? \`<div class="w-20 shrink-0 font-black text-slate-300 text-xl">\${item.date}</div>\` : ''}
                                         \${item.image ? \`<div class="w-32 h-32 shrink-0"><img src="\${item.image}" class="w-full h-full object-cover rounded-xl shadow-md"></div>\` : ''}
                                         <div class="flex-1">
-                                            <div class="text-xl font-bold text-slate-800 content-text" \${getStyleAttr(item.style)}>\${processText(item.text, item.inlineLinks)}</div>
+                                            <div class="\${listItemClass} text-slate-800 content-text" \${getStyleAttr(item.style)}>\${processText(item.text, item.inlineLinks)}</div>
                                             <p class="text-base text-slate-500 mt-2 leading-relaxed font-medium content-text" style="">\${processText(item.subtext || '', item.inlineLinks)}</p>
                                         </div>
                                     </div>
@@ -539,6 +557,7 @@ const App: React.FC = () => {
     URL.revokeObjectURL(url);
     setIsPublishDialogOpen(false);
   };
+  // -----------------------------------------------------
 
   const addPage = () => {
     const newPage: PageData = { id: `p-${Date.now()}`, title: 'New Page', layout: [] };
