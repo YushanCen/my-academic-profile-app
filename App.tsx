@@ -249,7 +249,7 @@ const App: React.FC = () => {
     }
   };
 
-  // --- 关键修改：重写导出功能，包含字体配置脚本和正确的样式处理 ---
+  // --- 关键修复：动态配置 Tailwind 和样式，而不是强制覆盖 ---
   const exportForGithub = () => {
     const siteData = { profile, theme, primaryColor };
     
@@ -260,9 +260,11 @@ const App: React.FC = () => {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${profile.name.text} | Academic Homepage</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=JetBrains+Mono&display=swap" rel="stylesheet">
     
-    <!-- 关键修复：配置 Tailwind 使用我们加载的字体 -->
+    <!-- 关键点1：配置 Tailwind 使用我们引入的字体 -->
     <script>
       tailwind.config = {
         theme: {
@@ -278,10 +280,8 @@ const App: React.FC = () => {
     </script>
 
     <style>
-        /* 强制全局字体 */
-        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #0f172a; }
-        .font-serif { font-family: 'Lora', serif; }
-        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        /* 关键点2：基础样式，保留灵活性 */
+        body { background-color: #f8fafc; color: #0f172a; }
         .theme-container { transition: all 0.5s ease; }
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: transparent; }
@@ -309,14 +309,18 @@ const App: React.FC = () => {
             };
 
             const getStyleAttr = (s) => {
-              if(!s) return '';
-              let styleStr = 'style="';
+              if(!s) return 'style="white-space: pre-wrap;"'; // 默认保留换行
+              let styleStr = 'style="white-space: pre-wrap; '; // 关键点3：强制保留换行
+              
               if(s.fontSize) styleStr += \`font-size: \${String(s.fontSize).match(/^\\d+$/) ? s.fontSize + 'px' : s.fontSize};\`;
               if(s.fontWeight) styleStr += \`font-weight: \${s.fontWeight};\`;
               if(s.color) styleStr += \`color: \${s.color};\`;
-              /* 确保有默认字体 */
-              styleStr += \`font-family: \${s.fontFamily ? (families[s.fontFamily] || 'inherit') : 'inherit'};\`;
+              /* 关键点4：动态使用用户选择的字体 */
+              if(s.fontFamily && families[s.fontFamily]) {
+                  styleStr += \`font-family: \${families[s.fontFamily]};\`;
+              }
               if(s.lineHeight) styleStr += \`line-height: \${String(s.lineHeight).match(/^\\d+$/) && Number(s.lineHeight) > 4 ? s.lineHeight + 'px' : s.lineHeight};\`;
+              
               styleStr += '"';
               return styleStr;
             };
@@ -356,7 +360,8 @@ const App: React.FC = () => {
                 return segments.map(seg => {
                     if (!seg.link) return seg.text;
                     const link = seg.link;
-                    const styleStr = getStyleAttr(link.style);
+                    // 移除 style=" 前缀，因为我们要组合样式
+                    const rawStyle = getStyleAttr(link.style).replace('style="', '').replace('"', '');
                     let href = link.url || '#';
                     let onClick = '';
                     
@@ -365,7 +370,7 @@ const App: React.FC = () => {
                          onClick = \`onclick="window.switchPage('\${link.internalPageId}'); return false;"\`;
                     }
                     
-                    const finalStyle = \`style="color: \${link.style?.color || primaryColor}; text-decoration: underline; text-underline-offset: 4px; \${styleStr.replace('style="', '').replace('"', '')}"\`;
+                    const finalStyle = \`style="color: \${link.style?.color || primaryColor}; text-decoration: underline; text-underline-offset: 4px; \${rawStyle}"\`;
                     
                     return \`<a href="\${href}" \${onClick} class="hover:opacity-70 transition-opacity" \${finalStyle}>\${seg.text}</a>\`;
                 }).join('');
@@ -380,8 +385,8 @@ const App: React.FC = () => {
                         <div class="flex flex-col lg:flex-row gap-16 items-start mb-28 p-8 rounded-3xl" style="background-color: \${primaryColor}08">
                             <img src="\${block.items[0]?.image}" class="w-64 h-80 object-cover shadow-xl border border-slate-100 p-1 bg-white rounded-2xl">
                             <div class="flex-1 space-y-6">
-                                <h1 class="text-3xl font-bold tracking-tight text-slate-900" style="border-left: 6px solid \${primaryColor}; padding-left: 1.5rem;">\${processText(block.title.text, block.title.inlineLinks)}</h1>
-                                <div class="text-lg leading-relaxed text-slate-700 font-medium" style="\${getStyleAttr(block.items[0]?.style)} white-space: pre-wrap;">\${processText(block.items[0]?.text, block.items[0]?.inlineLinks)}</div>
+                                <h1 class="text-3xl font-bold tracking-tight text-slate-900" style="border-left: 6px solid \${primaryColor}; padding-left: 1.5rem; \${getStyleAttr(block.title.style).replace('style="', '').replace('"', '')}">\${processText(block.title.text, block.title.inlineLinks)}</h1>
+                                <div class="text-lg leading-relaxed text-slate-700 font-medium" \${getStyleAttr(block.items[0]?.style)}>\${processText(block.items[0]?.text, block.items[0]?.inlineLinks)}</div>
                                 \${block.items[0]?.subtext ? \`<div class="text-base text-slate-500 italic opacity-80" style="white-space: pre-wrap;">\${processText(block.items[0]?.subtext, block.items[0]?.inlineLinks)}</div>\` : ''}
                             </div>
                         </div>\`;
@@ -400,7 +405,7 @@ const App: React.FC = () => {
                                         </div>
                                         <div>
                                             <p class="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">\${processText(item.text, item.inlineLinks)}</p>
-                                            <p class="text-sm font-bold text-slate-800 break-all" style="\${getStyleAttr(item.style)} white-space: pre-wrap;">\${processText(item.subtext, item.inlineLinks)}</p>
+                                            <p class="text-sm font-bold text-slate-800 break-all" \${getStyleAttr(item.style)}>\${processText(item.subtext, item.inlineLinks)}</p>
                                         </div>
                                     </div>
                                 \`).join('')}
@@ -419,7 +424,7 @@ const App: React.FC = () => {
                                         \${item.date ? \`<div class="w-20 shrink-0 font-black text-slate-300 text-xl">\${item.date}</div>\` : ''}
                                         \${item.image ? \`<div class="w-32 h-32 shrink-0"><img src="\${item.image}" class="w-full h-full object-cover rounded-xl shadow-md"></div>\` : ''}
                                         <div class="flex-1">
-                                            <div class="text-xl font-bold text-slate-800" style="\${getStyleAttr(item.style)} white-space: pre-wrap;">\${processText(item.text, item.inlineLinks)}</div>
+                                            <div class="text-xl font-bold text-slate-800" \${getStyleAttr(item.style)}>\${processText(item.text, item.inlineLinks)}</div>
                                             <p class="text-base text-slate-500 mt-2 leading-relaxed font-medium" style="white-space: pre-wrap;">\${processText(item.subtext || '', item.inlineLinks)}</p>
                                         </div>
                                     </div>
