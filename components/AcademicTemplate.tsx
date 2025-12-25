@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { AcademicProfile, ThemeType, SectionBlock, EditableItem, ElementStyle, InlineLink } from '../types';
 
@@ -18,6 +17,19 @@ const AcademicTemplate: React.FC<AcademicTemplateProps> = ({
   const activePage = data.pages.find(p => p.id === activePageId) || data.pages[0];
   const themeColors = data.themeSettings?.[theme] || {};
 
+  // --- 关键修改：增加了一个自动处理单位的辅助函数 ---
+  const formatSize = (value?: string | number) => {
+    if (value === undefined || value === null || value === '') return undefined;
+    const str = String(value).trim();
+    // 如果全是数字（例如 "10" 或 "10.5"），自动加上 px
+    if (!isNaN(Number(str))) {
+      return `${str}px`;
+    }
+    // 如果已经带了单位（例如 "1.5rem"），直接返回
+    return str;
+  };
+  // ------------------------------------------------
+
   const getStyle = (style?: ElementStyle): React.CSSProperties => {
     if (!style) return { whiteSpace: 'pre-wrap' };
     const families: Record<string, string> = {
@@ -28,7 +40,9 @@ const AcademicTemplate: React.FC<AcademicTemplateProps> = ({
       'mono': 'JetBrains Mono, monospace'
     };
     return {
-      fontSize: style.fontSize,
+      // --- 关键修改：使用 formatSize 包裹 fontSize ---
+      fontSize: formatSize(style.fontSize),
+      // -------------------------------------------
       fontWeight: style.fontWeight,
       fontStyle: style.fontStyle,
       textDecoration: style.textDecoration,
