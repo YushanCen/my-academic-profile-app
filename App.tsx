@@ -249,7 +249,7 @@ const App: React.FC = () => {
     }
   };
 
-  // --- 导出逻辑：支持自定义字号覆盖默认字号 ---
+  // --- 导出逻辑：加入对齐类名 Safelist ---
   const exportForGithub = () => {
     const siteData = { profile, theme, primaryColor };
     
@@ -260,7 +260,6 @@ const App: React.FC = () => {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${profile.name.text} | Academic Homepage</title>
     
-    <!-- 引入 Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=JetBrains+Mono&display=swap" rel="stylesheet">
@@ -277,18 +276,22 @@ const App: React.FC = () => {
               }
             }
           },
-          /* Safelist：确保这些类名一定会被生成 */
           safelist: [
+            /* 字体大小 */
             'text-xs', 'text-sm', 'text-base', 'text-lg', 'text-xl', 'text-2xl', 'text-3xl', 'text-4xl', 'text-5xl', 'text-6xl', 'text-7xl',
+            /* 字体样式 */
             'font-serif', 'font-sans', 'font-mono', 'font-black', 'font-bold', 'font-normal', 'font-light',
             'italic', 'tracking-tight', 'tracking-tighter', 'leading-none', 'uppercase', 'tracking-widest', 'tracking-[0.3em]', 'tracking-[0.6em]',
+            /* 对齐与布局 (新增关键点) */
+            'text-center', 'text-left', 'text-right', 'text-justify', 'mx-auto',
+            'flex-col', 'items-start', 'items-center', 'justify-center', 'justify-between', 'gap-8', 'gap-10', 'gap-12', 'gap-16',
+            /* 间距 */
             'p-24', 'p-20', 'p-16', 'p-12', 'p-10', 'p-8',
             'rounded-[80px]', 'rounded-[48px]', 'rounded-[3rem]', 'rounded-none', 'rounded-2xl',
             'border-t-[12px]', 'border-l-[32px]', 'border-b-[6px]', 'border-l-[8px]', 'border-l-[1px]', 'border-t-[20px]', 'border-b-4', 'border-b-2', 'border-b',
             'shadow-2xl', 'shadow-sm', 'shadow-none',
             'bg-[#f8f9fa]', 'bg-[#fffcf9]', 'bg-[#fdfbf7]', 'bg-white', 'bg-slate-50', 'bg-slate-100', 'bg-slate-800',
-            'max-w-7xl', 'border-x-[1px]', 'border-l-[12px]', 'border-l-4',
-            'flex-col', 'items-start', 'items-center', 'justify-center', 'justify-between', 'gap-8', 'gap-10', 'gap-12', 'gap-16'
+            'max-w-7xl', 'border-x-[1px]', 'border-l-[12px]', 'border-l-4'
           ]
         }
       }
@@ -296,7 +299,6 @@ const App: React.FC = () => {
     <script src="https://cdn.tailwindcss.com"></script>
 
     <style>
-        /* CSS Reset & Defaults */
         *, ::before, ::after { box-sizing: border-box; }
         body { 
             font-family: 'Inter', sans-serif; 
@@ -306,12 +308,7 @@ const App: React.FC = () => {
             line-height: 1.5;
         }
         
-        /* 
-           修复方案：
-           这里定义默认样式，但去掉了 !important。
-           这样，如果用户在元素上内联了 style="font-size: 20px"，内联样式优先级更高，会覆盖这里的默认值。
-           如果用户没设置，就用这里的默认值。
-        */
+        /* 默认大字样式 (可被手动覆盖) */
         .text-7xl { font-size: 4.5rem; line-height: 1; }
         .text-6xl { font-size: 3.75rem; line-height: 1; }
         .text-5xl { font-size: 3rem; line-height: 1; }
@@ -349,7 +346,7 @@ const App: React.FC = () => {
               'mono': 'JetBrains Mono, monospace'
             };
 
-            /* === 终极主题配置表 === */
+            /* 主题配置表 */
             const themeConfig = {
                 'theme-1': {
                     container: "bg-white p-24 rounded-[80px] shadow-2xl border-t-[12px]",
@@ -365,7 +362,7 @@ const App: React.FC = () => {
                     name: "font-serif italic text-6xl text-center leading-none text-slate-900",
                     navAlign: "justify-center",
                     sectionHeader: "text-2xl font-black mb-8 tracking-tighter flex items-center gap-4 font-serif italic border-b border-slate-200 pb-1 text-3xl justify-center text-slate-800",
-                    bioTitle: "text-5xl font-serif italic"
+                    bioTitle: "text-5xl font-serif italic text-center"
                 },
                 'theme-3': {
                     container: "bg-[#f8f9fa] p-24 border-l-[32px]",
@@ -433,6 +430,9 @@ const App: React.FC = () => {
               }
               if(s.lineHeight) styleStr += \`line-height: \${String(s.lineHeight).match(/^\\d+$/) && Number(s.lineHeight) > 4 ? s.lineHeight + 'px' : s.lineHeight};\`;
               
+              // 关键修复：加入 textAlign 处理
+              if(s.textAlign) styleStr += \`text-align: \${s.textAlign};\`;
+
               styleStr += '"';
               return styleStr;
             };
@@ -622,9 +622,8 @@ const App: React.FC = () => {
     URL.revokeObjectURL(url);
     setIsPublishDialogOpen(false);
   };
+  // ... rest of the component logic remains unchanged
   
-  // ... rest of component methods ...
-
   const addPage = () => {
     const newPage: PageData = { id: `p-${Date.now()}`, title: 'New Page', layout: [] };
     const next = { ...profile, pages: [...profile.pages, newPage] };
