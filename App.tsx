@@ -249,7 +249,7 @@ const App: React.FC = () => {
     }
   };
 
-  // --- 关键修复：智能对齐转换 (text-align -> justify-content) ---
+  // --- 导出逻辑：压缩空白，修复对齐与间距 ---
   const exportForGithub = () => {
     const siteData = { profile, theme, primaryColor };
     
@@ -302,6 +302,7 @@ const App: React.FC = () => {
             color: #0f172a; 
             margin: 0;
             line-height: 1.5;
+            font-size: 16px; /* 强制基准字号，防止缩小 */
         }
         
         .text-7xl { font-size: 4.5rem; line-height: 1; }
@@ -347,7 +348,7 @@ const App: React.FC = () => {
                     header: "mb-32 flex flex-col items-start gap-8 pb-20 border-b-2 border-slate-100",
                     name: "text-7xl font-black tracking-tighter leading-none text-slate-900",
                     navAlign: "justify-start",
-                    sectionHeader: "text-2xl font-black mb-8 tracking-tighter flex items-center gap-4 border-b-4 border-slate-900 pb-2 uppercase text-slate-900",
+                    sectionHeader: "text-2xl font-black mb-8 tracking-tighter flex items-center gap-4 border-b-4 border-slate-900 pb-2 uppercase text-slate-900 justify-start",
                     bioTitle: "text-4xl"
                 },
                 'theme-2': {
@@ -363,7 +364,7 @@ const App: React.FC = () => {
                     header: "mb-32 bg-white p-12 -mx-24 -mt-24 shadow-sm flex flex-col gap-10 items-start",
                     name: "text-7xl font-black tracking-tighter leading-none text-slate-900",
                     navAlign: "justify-start",
-                    sectionHeader: "text-2xl font-black mb-8 tracking-tighter flex items-center gap-4 bg-slate-800 text-white px-6 py-3 rounded-r-lg -ml-24 shadow-md w-fit",
+                    sectionHeader: "text-2xl font-black mb-8 tracking-tighter flex items-center gap-4 bg-slate-800 text-white px-6 py-3 rounded-r-lg -ml-24 shadow-md w-fit justify-start",
                     bioTitle: "text-3xl"
                 },
                 'theme-4': {
@@ -371,7 +372,7 @@ const App: React.FC = () => {
                     header: "mb-20 flex flex-col gap-10 items-start bg-white/80 backdrop-blur p-8 rounded-3xl shadow-sm sticky top-0 z-50",
                     name: "text-7xl font-black tracking-tighter leading-none text-slate-900",
                     navAlign: "justify-start",
-                    sectionHeader: "text-slate-900/40 uppercase tracking-[0.3em] text-xs font-black border-none flex items-center gap-4 mb-8",
+                    sectionHeader: "text-slate-900/40 uppercase tracking-[0.3em] text-xs font-black border-none flex items-center gap-4 mb-8 justify-start",
                     bioTitle: "text-3xl"
                 },
                 'theme-5': {
@@ -379,7 +380,7 @@ const App: React.FC = () => {
                     header: "mb-32 flex flex-col items-start gap-12 pb-20 border-b-[6px] border-slate-900",
                     name: "font-serif text-5xl italic leading-none text-slate-900",
                     navAlign: "justify-start",
-                    sectionHeader: "text-4xl font-serif text-slate-900 border-l-[12px] pl-6 flex items-center gap-4 mb-8",
+                    sectionHeader: "text-4xl font-serif text-slate-900 border-l-[12px] pl-6 flex items-center gap-4 mb-8 justify-start",
                     bioTitle: "text-6xl font-serif"
                 },
                 'theme-6': {
@@ -387,7 +388,7 @@ const App: React.FC = () => {
                     header: "mb-32 flex flex-col gap-10 items-start pb-12 border-b-2 border-slate-900",
                     name: "text-7xl font-black tracking-tighter leading-none text-slate-900",
                     navAlign: "justify-start",
-                    sectionHeader: "bg-slate-100 text-slate-900 px-4 py-1 text-lg uppercase tracking-widest border-l-4 border-slate-900 flex items-center gap-4 mb-8",
+                    sectionHeader: "bg-slate-100 text-slate-900 px-4 py-1 text-lg uppercase tracking-widest border-l-4 border-slate-900 flex items-center gap-4 mb-8 justify-start",
                     bioTitle: "text-3xl"
                 },
                 'theme-7': {
@@ -395,7 +396,7 @@ const App: React.FC = () => {
                     header: "mb-32 flex flex-col gap-16 border-l-[1px] border-slate-900 pl-12 items-start",
                     name: "font-serif italic text-6xl text-center leading-none text-slate-900",
                     navAlign: "justify-start",
-                    sectionHeader: "text-5xl font-serif font-light italic border-b-[1px] border-slate-900/20 w-full pb-4 flex items-center gap-4 mb-8",
+                    sectionHeader: "text-5xl font-serif font-light italic border-b-[1px] border-slate-900/20 w-full pb-4 flex items-center gap-4 mb-8 justify-start",
                     bioTitle: "text-3xl font-serif"
                 },
                 'theme-8': {
@@ -403,7 +404,7 @@ const App: React.FC = () => {
                     header: "mb-32 flex flex-col justify-between items-start gap-12 pb-16 border-b border-slate-100",
                     name: "text-6xl tracking-[-0.05em] text-slate-900 font-black leading-none",
                     navAlign: "justify-start",
-                    sectionHeader: "text-xs font-black uppercase tracking-[0.6em] text-slate-400 mb-10 w-full flex items-center gap-6 after:content-[''] after:h-[1px] after:flex-1 after:bg-slate-100",
+                    sectionHeader: "text-xs font-black uppercase tracking-[0.6em] text-slate-400 mb-10 w-full flex items-center gap-6 after:content-[''] after:h-[1px] after:flex-1 after:bg-slate-100 justify-start",
                     bioTitle: "text-6xl font-black tracking-tighter leading-[1.05]"
                 }
             };
@@ -424,7 +425,6 @@ const App: React.FC = () => {
               }
               if(s.lineHeight) styleStr += \`line-height: \${String(s.lineHeight).match(/^\\d+$/) && Number(s.lineHeight) > 4 ? s.lineHeight + 'px' : s.lineHeight};\`;
               
-              // 关键修复：如果用户设置了对齐，同时应用 justify-content 以兼容 Flex 布局
               if(s.textAlign) {
                  styleStr += \`text-align: \${s.textAlign};\`;
                  if(s.textAlign === 'center') styleStr += 'justify-content: center;';
@@ -516,87 +516,20 @@ const App: React.FC = () => {
                     const bioTitleClass = currentConfig.bioTitle;
                     const bioBodyClass = theme === 'theme-2' || theme === 'theme-7' ? 'font-serif' : '';
                     
-                    content = \`
-                        <div class="flex flex-col lg:flex-row gap-16 items-start mb-28 \${theme === 'theme-1' ? 'p-10 border-l-[8px]' : theme === 'theme-2' ? 'p-0 text-center items-center' : theme === 'theme-3' ? 'p-8 bg-white shadow-sm' : ''}" style="\${theme === 'theme-1' ? 'border-left-color:' + primaryColor : ''}">
-                            <img src="\${block.items[0]?.image}" class="w-64 h-80 object-cover shadow-xl border border-slate-100 p-1 bg-white \${theme === 'theme-4' ? 'rounded-[3rem]' : 'rounded-2xl'}">
-                            <div class="flex-1 space-y-6">
-                                <h1 class="\${bioTitleClass} tracking-tight text-slate-900 content-text" \${getStyleAttr(block.title.style)}>\${processText(block.title.text, block.title.inlineLinks)}</h1>
-                                <div class="text-lg leading-relaxed text-slate-700 font-medium content-text \${bioBodyClass}" \${getStyleAttr(block.items[0]?.style)}>\${processText(block.items[0]?.text, block.items[0]?.inlineLinks)}</div>
-                                \${block.items[0]?.subtext ? \`<div class="text-base text-slate-500 italic opacity-80 content-text" style="">\${processText(block.items[0]?.subtext, block.items[0]?.inlineLinks)}</div>\` : ''}
-                            </div>
-                        </div>\`;
+                    /* 关键修复：移除所有多余空格，紧贴变量 */
+                    content = \`<div class="flex flex-col lg:flex-row gap-16 items-start mb-28 \${theme === 'theme-1' ? 'p-10 border-l-[8px]' : theme === 'theme-2' ? 'p-0 text-center items-center' : theme === 'theme-3' ? 'p-8 bg-white shadow-sm' : ''}" style="\${theme === 'theme-1' ? 'border-left-color:' + primaryColor : ''}"><img src="\${block.items[0]?.image}" class="w-64 h-80 object-cover shadow-xl border border-slate-100 p-1 bg-white \${theme === 'theme-4' ? 'rounded-[3rem]' : 'rounded-2xl'}"><div class="flex-1 space-y-6"><h1 class="\${bioTitleClass} tracking-tight text-slate-900 content-text" \${getStyleAttr(block.title.style)}>\${processText(block.title.text, block.title.inlineLinks)}</h1><div class="text-lg leading-relaxed text-slate-700 font-medium content-text \${bioBodyClass}" \${getStyleAttr(block.items[0]?.style)}>\${processText(block.items[0]?.text, block.items[0]?.inlineLinks)}</div>\${block.items[0]?.subtext ? \`<div class="text-base text-slate-500 italic opacity-80 content-text" style="">\${processText(block.items[0]?.subtext, block.items[0]?.inlineLinks)}</div>\` : ''}</div></div>\`;
                 } else if (block.type === 'contact-grid') {
-                    content = \`
-                        <div class="mb-28">
-                            <h2 class="\${sectionHeaderClass}" \${getStyleAttr(block.title.style)}>
-                                \${!['theme-1', 'theme-2', 'theme-3', 'theme-4', 'theme-5', 'theme-6', 'theme-7', 'theme-8'].includes(theme) ? \`<span class="w-1.5 h-6 rounded-sm" style="background-color: \${primaryColor}"></span>\` : ''}
-                                \${processText(block.title.text, block.title.inlineLinks)}
-                            </h2>
-                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                                \${block.items.map(item => \`
-                                    <div class="p-6 bg-white border border-slate-100 rounded-[32px] flex flex-col items-center text-center gap-4 shadow-sm">
-                                        <div class="w-14 h-14 rounded-2xl flex items-center justify-center bg-slate-50 border border-slate-50 p-2.5" style="border-color: \${primaryColor}40">
-                                            <div class="w-full h-full text-slate-600 font-black text-[10px]">
-                                              \${item.icon === 'custom' && item.customIcon ? \`<img src="\${item.customIcon}" class="w-full h-full object-contain">\` : getIconSvg(item.icon)}
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <p class="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">\${processText(item.text, item.inlineLinks)}</p>
-                                            <p class="text-sm font-bold text-slate-800 break-all content-text" \${getStyleAttr(item.style)}>\${processText(item.subtext, item.inlineLinks)}</p>
-                                        </div>
-                                    </div>
-                                \`).join('')}
-                            </div>
-                        </div>\`;
+                    content = \`<div class="mb-28"><h2 class="\${sectionHeaderClass}" \${getStyleAttr(block.title.style)}>\${!['theme-1', 'theme-2', 'theme-3', 'theme-4', 'theme-5', 'theme-6', 'theme-7', 'theme-8'].includes(theme) ? \`<span class="w-1.5 h-6 rounded-sm" style="background-color: \${primaryColor}"></span>\` : ''}\${processText(block.title.text, block.title.inlineLinks)}</h2><div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">\${block.items.map(item => \`<div class="p-6 bg-white border border-slate-100 rounded-[32px] flex flex-col items-center text-center gap-4 shadow-sm"><div class="w-14 h-14 rounded-2xl flex items-center justify-center bg-slate-50 border border-slate-50 p-2.5" style="border-color: \${primaryColor}40"><div class="w-full h-full text-slate-600 font-black text-[10px]">\${item.icon === 'custom' && item.customIcon ? \`<img src="\${item.customIcon}" class="w-full h-full object-contain">\` : getIconSvg(item.icon)}</div></div><div><p class="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">\${processText(item.text, item.inlineLinks)}</p><p class="text-sm font-bold text-slate-800 break-all content-text" \${getStyleAttr(item.style)}>\${processText(item.subtext, item.inlineLinks)}</p></div></div>\`).join('')}</div></div>\`;
                 } else {
                     const listItemClass = theme === 'theme-2' || theme === 'theme-7' ? 'font-serif text-2xl' : theme === 'theme-8' ? 'text-2xl tracking-tight' : 'text-xl font-bold';
-                    content = \`
-                        <div class="mb-28">
-                            <h2 class="\${sectionHeaderClass}" \${getStyleAttr(block.title.style)}>
-                                \${!['theme-1', 'theme-2', 'theme-3', 'theme-4', 'theme-5', 'theme-6', 'theme-7', 'theme-8'].includes(theme) ? \`<span class="w-1.5 h-6 rounded-sm" style="background-color: \${primaryColor}"></span>\` : ''}
-                                \${processText(block.title.text, block.title.inlineLinks)}
-                            </h2>
-                            <div class="space-y-10">
-                                \${block.items.map(item => \`
-                                    <div class="pb-10 border-b border-slate-100 flex flex-col md:flex-row gap-6 md:gap-16 last:border-0 \${theme === 'theme-3' ? 'p-8 bg-white mb-4 border-none shadow-sm rounded-lg' : ''}">
-                                        \${item.date ? \`<div class="w-20 shrink-0 font-black text-slate-300 text-xl">\${item.date}</div>\` : ''}
-                                        \${item.image ? \`<div class="w-32 h-32 shrink-0"><img src="\${item.image}" class="w-full h-full object-cover rounded-xl shadow-md"></div>\` : ''}
-                                        <div class="flex-1">
-                                            <div class="\${listItemClass} text-slate-800 content-text" \${getStyleAttr(item.style)}>\${processText(item.text, item.inlineLinks)}</div>
-                                            <p class="text-base text-slate-500 mt-2 leading-relaxed font-medium content-text" style="">\${processText(item.subtext || '', item.inlineLinks)}</p>
-                                        </div>
-                                    </div>
-                                \`).join('')}
-                            </div>
-                        </div>\`;
+                    content = \`<div class="mb-28"><h2 class="\${sectionHeaderClass}" \${getStyleAttr(block.title.style)}>\${!['theme-1', 'theme-2', 'theme-3', 'theme-4', 'theme-5', 'theme-6', 'theme-7', 'theme-8'].includes(theme) ? \`<span class="w-1.5 h-6 rounded-sm" style="background-color: \${primaryColor}"></span>\` : ''}\${processText(block.title.text, block.title.inlineLinks)}</h2><div class="space-y-10">\${block.items.map(item => \`<div class="pb-10 border-b border-slate-100 flex flex-col md:flex-row gap-6 md:gap-16 last:border-0 \${theme === 'theme-3' ? 'p-8 bg-white mb-4 border-none shadow-sm rounded-lg' : ''}">\${item.date ? \`<div class="w-20 shrink-0 font-black text-slate-300 text-xl">\${item.date}</div>\` : ''}\${item.image ? \`<div class="w-32 h-32 shrink-0"><img src="\${item.image}" class="w-full h-full object-cover rounded-xl shadow-md"></div>\` : ''}<div class="flex-1"><div class="\${listItemClass} text-slate-800 content-text" \${getStyleAttr(item.style)}>\${processText(item.text, item.inlineLinks)}</div><p class="text-base text-slate-500 mt-2 leading-relaxed font-medium content-text" style="">\${processText(item.subtext || '', item.inlineLinks)}</p></div></div>\`).join('')}</div></div>\`;
                 }
                 return \`<div class="\${widthClass} mx-auto">\${content}</div>\`;
             };
 
             const pageContent = activePage.layout.map(renderBlock).join('');
             
-            root.innerHTML = \`
-                <div class="p-12 md:p-24 bg-white min-h-screen">
-                    <div class="max-w-6xl mx-auto \${currentConfig.container} theme-container">
-                        <header class="\${currentConfig.header}">
-                            <div class="flex flex-col gap-10 w-full \${theme === 'theme-2' ? 'items-center' : 'items-start'}">
-                                <h1 class="\${currentConfig.name} content-text" \${getStyleAttr(profile.name.style)}>\${processText(profile.name.text, profile.name.inlineLinks)}</h1>
-                                <nav class="flex flex-wrap \${currentConfig.navAlign} \${['theme-2', 'theme-5', 'theme-7', 'theme-8'].includes(theme) ? 'gap-16' : 'gap-12'} w-full">
-                                    \${profile.pages.map(p => \`
-                                        <button onclick="window.switchPage('\${p.id}')" class="text-xs font-black uppercase tracking-[0.4em] transition-all relative py-2 \${p.id === activePageId ? '' : 'opacity-20 hover:opacity-100'}" style="color: \${p.id === activePageId ? primaryColor : 'inherit'}">
-                                            \${p.title}
-                                            \${p.id === activePageId ? \`<div class="absolute bottom-0 left-0 w-full rounded-full \${theme === 'theme-4' ? 'h-1' : 'h-2'}" style="background-color: \${primaryColor}"></div>\` : ''}
-                                        </button>
-                                    \`).join('')}
-                                </nav>
-                            </div>
-                        </header>
-                        <main>\${pageContent}</main>
-                        <footer class="mt-64 pt-24 border-t-2 border-slate-100 text-center opacity-30">
-                            <p class="text-[10px] font-black uppercase tracking-[0.5em]">\${new Date().getFullYear()} \${profile.name.text.toUpperCase()}</p>
-                        </footer>
-                    </div>
-                </div>\`;
+            root.innerHTML = \`<div class="p-12 md:p-24 bg-white min-h-screen"><div class="max-w-6xl mx-auto \${currentConfig.container} theme-container"><header class="\${currentConfig.header}"><div class="flex flex-col gap-10 w-full \${theme === 'theme-2' ? 'items-center' : 'items-start'}"><h1 class="\${currentConfig.name} content-text" \${getStyleAttr(profile.name.style)}>\${processText(profile.name.text, profile.name.inlineLinks)}</h1><nav class="flex flex-wrap \${currentConfig.navAlign} \${['theme-2', 'theme-5', 'theme-7', 'theme-8'].includes(theme) ? 'gap-16' : 'gap-12'} w-full">\${profile.pages.map(p => \`<button onclick="window.switchPage('\${p.id}')" class="text-xs font-black uppercase tracking-[0.4em] transition-all relative py-2 \${p.id === activePageId ? '' : 'opacity-20 hover:opacity-100'}" style="color: \${p.id === activePageId ? primaryColor : 'inherit'}">\${p.title}\${p.id === activePageId ? \`<div class="absolute bottom-0 left-0 w-full rounded-full \${theme === 'theme-4' ? 'h-1' : 'h-2'}" style="background-color: \${primaryColor}"></div>\` : ''}</button>\`).join('')}</nav></div></header><main>\${pageContent}</main><footer class="mt-64 pt-24 border-t-2 border-slate-100 text-center opacity-30"><p class="text-[10px] font-black uppercase tracking-[0.5em]">\${new Date().getFullYear()} \${profile.name.text.toUpperCase()}</p></footer></div></div>\`;
         }
 
         window.switchPage = (id) => {
@@ -622,7 +555,7 @@ const App: React.FC = () => {
     setIsPublishDialogOpen(false);
   };
   
-  // ... rest of logic unchanged
+  // ... (rest of the component logic unchanged)
   
   const addPage = () => {
     const newPage: PageData = { id: `p-${Date.now()}`, title: 'New Page', layout: [] };
@@ -879,16 +812,12 @@ const App: React.FC = () => {
               <div className="space-y-2">
                 <label className="text-[10px] font-bold text-slate-400 uppercase">Typography & Content</label>
                 
-                {/* 字体选择独立一行，因为名字比较长 */}
                 <select className="w-full p-2 bg-slate-50 rounded-lg text-xs mb-2" value={item?.style?.fontFamily || 'sans'} onChange={e => updateByPath([...editingElement.path, 'style', 'fontFamily'], e.target.value)}>
                   {FONTS.map(f => <option key={f.key} value={f.key}>{f.name}</option>)}
                 </select>
 
                 <div className="grid grid-cols-2 gap-3">
-                  {/* 字体大小 */}
                   <input type="text" placeholder="Size (e.g. 15)" className="w-full p-2 bg-slate-50 rounded-lg text-xs" value={item?.style?.fontSize || ''} onChange={e => updateByPath([...editingElement.path, 'style', 'fontSize'], e.target.value)} />
-                  
-                  {/* 行距 (Line Height) - 新增功能 */}
                   <input type="text" placeholder="Line Height (e.g. 1.6)" className="w-full p-2 bg-slate-50 rounded-lg text-xs" value={item?.style?.lineHeight || ''} onChange={e => updateByPath([...editingElement.path, 'style', 'lineHeight'], e.target.value)} />
                 </div>
                 
@@ -921,7 +850,6 @@ const App: React.FC = () => {
                    </div>
                 )}
 
-                {/* Dimension Control for Photo-heavy blocks like group-photo */}
                 {(editingElement.type === 'photo' || editingElement.type === 'item' || editingElement.type === 'member') && getParentBlockPath() && (() => {
                   const parts = editingElement.path;
                   const blockIdx = parts.indexOf('layout') + 1;
