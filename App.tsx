@@ -249,7 +249,7 @@ const App: React.FC = () => {
     }
   };
 
-  // --- 关键修改：修复了正则表达式的转义问题 ---
+  // --- 关键修改：重写导出功能，包含字体配置脚本和正确的样式处理 ---
   const exportForGithub = () => {
     const siteData = { profile, theme, primaryColor };
     
@@ -260,18 +260,36 @@ const App: React.FC = () => {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${profile.name.text} | Academic Homepage</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Lora:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=JetBrains+Mono&display=swap" rel="stylesheet">
+    
+    <!-- 关键修复：配置 Tailwind 使用我们加载的字体 -->
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+              serif: ['Lora', 'serif'],
+              mono: ['JetBrains Mono', 'monospace'],
+            }
+          }
+        }
+      }
+    </script>
+
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        /* 强制全局字体 */
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #0f172a; }
         .font-serif { font-family: 'Lora', serif; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
         .theme-container { transition: all 0.5s ease; }
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        a { text-decoration: none; }
+        a { text-decoration: none; color: inherit; }
     </style>
 </head>
-<body>
+<body class="font-sans antialiased text-slate-900">
     <div id="render-root"></div>
     <script type="module">
         const data = ${JSON.stringify(siteData)};
@@ -287,7 +305,7 @@ const App: React.FC = () => {
               'serif': 'Lora, serif',
               'times': '"Times New Roman", Times, serif',
               'georgia': 'Georgia, serif',
-              'mono': 'monospace'
+              'mono': 'JetBrains Mono, monospace'
             };
 
             const getStyleAttr = (s) => {
@@ -296,13 +314,13 @@ const App: React.FC = () => {
               if(s.fontSize) styleStr += \`font-size: \${String(s.fontSize).match(/^\\d+$/) ? s.fontSize + 'px' : s.fontSize};\`;
               if(s.fontWeight) styleStr += \`font-weight: \${s.fontWeight};\`;
               if(s.color) styleStr += \`color: \${s.color};\`;
-              if(s.fontFamily) styleStr += \`font-family: \${families[s.fontFamily] || 'inherit'};\`;
+              /* 确保有默认字体 */
+              styleStr += \`font-family: \${s.fontFamily ? (families[s.fontFamily] || 'inherit') : 'inherit'};\`;
               if(s.lineHeight) styleStr += \`line-height: \${String(s.lineHeight).match(/^\\d+$/) && Number(s.lineHeight) > 4 ? s.lineHeight + 'px' : s.lineHeight};\`;
               styleStr += '"';
               return styleStr;
             };
 
-            /* --- 核心修复：添加处理链接和格式的函数 --- */
             const processText = (text, links) => {
                 const safeText = text ? String(text) : '';
                 if (!links || links.length === 0) return safeText;
@@ -318,7 +336,6 @@ const App: React.FC = () => {
                             return;
                         }
                         try {
-                            /* 注意这里：我们把 '$\{...}' 里的 $ 符号转义了 */
                             const escapedMatch = link.matchText.replace(/[.*+?^\${}()|[\\]\\\\]/g, '\\\\$&');
                             const regex = new RegExp(\`(\${escapedMatch})\`, 'gi');
                             const parts = seg.text.split(regex);
@@ -358,7 +375,6 @@ const App: React.FC = () => {
                 let content = '';
                 const widthClass = block.layoutConfig?.width === 'narrow' ? 'max-w-3xl' : block.layoutConfig?.width === 'medium' ? 'max-w-4xl' : 'max-w-6xl';
                 
-                /* 注意：这里所有 block.items?.text 现在都包裹了 processText 函数 */
                 if (block.type === 'bio-hero') {
                     content = \`
                         <div class="flex flex-col lg:flex-row gap-16 items-start mb-28 p-8 rounded-3xl" style="background-color: \${primaryColor}08">
