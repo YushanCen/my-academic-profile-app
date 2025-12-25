@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useMemo, useEffect, useCallback } from 'react';
 import { AcademicProfile, ThemeType, EditableItem, BlockType, SectionBlock, PageData, InlineLink } from './types';
 import { INITIAL_DATA, ACADEMIC_PALETTES, FONTS, THEME_LIST } from './constants';
@@ -298,6 +297,9 @@ const App: React.FC = () => {
               if(s.fontWeight) styleStr += \`font-weight: \${s.fontWeight};\`;
               if(s.color) styleStr += \`color: \${s.color};\`;
               if(s.fontFamily) styleStr += \`font-family: \${families[s.fontFamily] || 'inherit'};\`;
+              /* ---------- 修改 1: 确保导出时包含 Line Height ---------- */
+              if(s.lineHeight) styleStr += \`line-height: \${s.lineHeight};\`;
+              /* ---------------------------------------------------- */
               styleStr += '"';
               return styleStr;
             };
@@ -312,7 +314,7 @@ const App: React.FC = () => {
                             <img src="\${block.items[0]?.image}" class="w-64 h-80 object-cover shadow-xl border border-slate-100 p-1 bg-white rounded-2xl">
                             <div class="flex-1 space-y-6">
                                 <h1 class="text-3xl font-bold tracking-tight text-slate-900" style="border-left: 6px solid \${primaryColor}; padding-left: 1.5rem;">\${block.title.text}</h1>
-                                <div class="text-lg leading-relaxed text-slate-700 font-medium" style="white-space: pre-wrap;">\${block.items[0]?.text}</div>
+                                <div class="text-lg leading-relaxed text-slate-700 font-medium" style="\${getStyleAttr(block.items[0]?.style)} white-space: pre-wrap;">\${block.items[0]?.text}</div>
                             </div>
                         </div>\`;
                 } else if (block.type === 'contact-grid') {
@@ -330,7 +332,7 @@ const App: React.FC = () => {
                                         </div>
                                         <div>
                                             <p class="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">\${item.text}</p>
-                                            <p class="text-sm font-bold text-slate-800 break-all" style="white-space: pre-wrap;">\${item.subtext}</p>
+                                            <p class="text-sm font-bold text-slate-800 break-all" style="\${getStyleAttr(item.style)} white-space: pre-wrap;">\${item.subtext}</p>
                                         </div>
                                     </div>
                                 \`).join('')}
@@ -349,7 +351,7 @@ const App: React.FC = () => {
                                         \${item.date ? \`<div class="w-20 shrink-0 font-black text-slate-300 text-xl">\${item.date}</div>\` : ''}
                                         \${item.image ? \`<div class="w-32 h-32 shrink-0"><img src="\${item.image}" class="w-full h-full object-cover rounded-xl shadow-md"></div>\` : ''}
                                         <div class="flex-1">
-                                            <div class="text-xl font-bold text-slate-800" style="white-space: pre-wrap;">\${item.text}</div>
+                                            <div class="text-xl font-bold text-slate-800" style="\${getStyleAttr(item.style)} white-space: pre-wrap;">\${item.text}</div>
                                             <p class="text-base text-slate-500 mt-2 leading-relaxed font-medium" style="white-space: pre-wrap;">\${item.subtext || ''}</p>
                                         </div>
                                     </div>
@@ -661,12 +663,22 @@ const App: React.FC = () => {
             <div className="space-y-4">
               <div className="space-y-2">
                 <label className="text-[10px] font-bold text-slate-400 uppercase">Typography & Content</label>
+                
+                {/* ---------- 修改 2: 优化控制面板布局，增加行距控制 ---------- */}
+                
+                {/* 字体选择独立一行，因为名字比较长 */}
+                <select className="w-full p-2 bg-slate-50 rounded-lg text-xs mb-2" value={item?.style?.fontFamily || 'sans'} onChange={e => updateByPath([...editingElement.path, 'style', 'fontFamily'], e.target.value)}>
+                  {FONTS.map(f => <option key={f.key} value={f.key}>{f.name}</option>)}
+                </select>
+
                 <div className="grid grid-cols-2 gap-3">
-                  <select className="w-full p-2 bg-slate-50 rounded-lg text-xs" value={item?.style?.fontFamily || 'sans'} onChange={e => updateByPath([...editingElement.path, 'style', 'fontFamily'], e.target.value)}>
-                    {FONTS.map(f => <option key={f.key} value={f.key}>{f.name}</option>)}
-                  </select>
-                  <input type="text" placeholder="Size (e.g. 1.2rem)" className="w-full p-2 bg-slate-50 rounded-lg text-xs" value={item?.style?.fontSize || ''} onChange={e => updateByPath([...editingElement.path, 'style', 'fontSize'], e.target.value)} />
+                  {/* 字体大小 */}
+                  <input type="text" placeholder="Size (e.g. 15)" className="w-full p-2 bg-slate-50 rounded-lg text-xs" value={item?.style?.fontSize || ''} onChange={e => updateByPath([...editingElement.path, 'style', 'fontSize'], e.target.value)} />
+                  
+                  {/* 行距 (Line Height) - 新增功能 */}
+                  <input type="text" placeholder="Line Height (e.g. 1.6)" className="w-full p-2 bg-slate-50 rounded-lg text-xs" value={item?.style?.lineHeight || ''} onChange={e => updateByPath([...editingElement.path, 'style', 'lineHeight'], e.target.value)} />
                 </div>
+                {/* -------------------------------------------------------- */}
                 
                 <div className="flex gap-2">
                   <input type="color" className="flex-1 h-8 rounded-lg" value={item?.style?.color || '#000000'} onChange={e => updateByPath([...editingElement.path, 'style', 'color'], e.target.value)} />
