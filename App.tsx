@@ -249,7 +249,7 @@ const App: React.FC = () => {
     }
   };
 
-  // --- 导出逻辑修复：确保标题样式被应用 ---
+  // --- 关键修复：加入 Safelist，强制生成样式 ---
   const exportForGithub = () => {
     const siteData = { profile, theme, primaryColor };
     
@@ -274,12 +274,28 @@ const App: React.FC = () => {
               mono: ['JetBrains Mono', 'monospace'],
             }
           }
-        }
+        },
+        /* 核心修复：把可能用到的动态类名全写在这里 */
+        safelist: [
+          'text-3xl', 'text-4xl', 'text-5xl', 'text-6xl', 'text-7xl',
+          'font-serif', 'font-sans', 'font-mono',
+          'font-black', 'italic', 'tracking-tight', 'tracking-tighter', 'leading-none',
+          'p-24', 'p-20', 'p-16', 'p-12', 'p-10', 'p-8',
+          'rounded-[80px]', 'rounded-[48px]', 'rounded-[3rem]', 'rounded-none', 'rounded-2xl',
+          'border-t-[12px]', 'border-l-[32px]', 'border-b-[6px]', 'border-l-[8px]', 'border-l-[1px]', 'border-t-[20px]',
+          'shadow-2xl', 'shadow-sm', 'shadow-none',
+          'bg-[#f8f9fa]', 'bg-[#fffcf9]', 'bg-[#fdfbf7]', 'bg-white', 'bg-slate-50',
+          'max-w-7xl', 'border-x-[1px]'
+        ]
       }
     </script>
 
     <style>
-        body { background-color: #f8fafc; color: #0f172a; }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #f8fafc; 
+            color: #0f172a; 
+        }
         .font-serif { font-family: 'Lora', serif !important; }
         .font-mono { font-family: 'JetBrains Mono', monospace !important; }
         .font-sans { font-family: 'Inter', sans-serif !important; }
@@ -293,7 +309,7 @@ const App: React.FC = () => {
         a { text-decoration: none; color: inherit; }
     </style>
 </head>
-<body class="antialiased text-slate-900">
+<body class="font-sans antialiased text-slate-900">
     <div id="render-root"></div>
     <script type="module">
         const data = ${JSON.stringify(siteData)};
@@ -303,7 +319,6 @@ const App: React.FC = () => {
         function render() {
             const root = document.getElementById('render-root');
             const activePage = profile.pages.find(p => p.id === activePageId) || profile.pages[0];
-            const themeColors = profile.themeSettings?.[theme] || {};
             
             const families = {
               'sans': 'Inter, sans-serif',
@@ -359,12 +374,17 @@ const App: React.FC = () => {
             const getStyleAttr = (s) => {
               if(!s) return 'style="white-space: pre-wrap;"';
               let styleStr = 'style="white-space: pre-wrap; ';
+              
               if(s.fontSize) styleStr += \`font-size: \${String(s.fontSize).match(/^\\d+$/) ? s.fontSize + 'px' : s.fontSize};\`;
               if(s.fontWeight) styleStr += \`font-weight: \${s.fontWeight};\`;
               if(s.fontStyle) styleStr += \`font-style: \${s.fontStyle};\`; 
               if(s.color) styleStr += \`color: \${s.color};\`;
-              if(s.fontFamily && families[s.fontFamily]) styleStr += \`font-family: \${families[s.fontFamily]};\`;
+              
+              if(s.fontFamily && families[s.fontFamily]) {
+                  styleStr += \`font-family: \${families[s.fontFamily]};\`;
+              }
               if(s.lineHeight) styleStr += \`line-height: \${String(s.lineHeight).match(/^\\d+$/) && Number(s.lineHeight) > 4 ? s.lineHeight + 'px' : s.lineHeight};\`;
+              
               styleStr += '"';
               return styleStr;
             };
