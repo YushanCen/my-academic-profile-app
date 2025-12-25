@@ -70,7 +70,6 @@ const App: React.FC = () => {
   const activePage = profile.pages.find(p => p.id === activePageId) || profile.pages[0];
   const allColors = useMemo(() => ACADEMIC_PALETTES.flatMap(g => g.colors), []);
 
-  // Helper to update profile and history - using functional update to avoid stale closure issues
   const pushToHistory = useCallback((newProfile: AcademicProfile) => {
     setHistory(prev => {
       const newHistory = prev.slice(0, historyIndex + 1);
@@ -111,7 +110,6 @@ const App: React.FC = () => {
       }
       current[path[path.length - 1]] = value;
       
-      // Update history in sync with state
       const newHistory = history.slice(0, historyIndex + 1);
       newHistory.push(next);
       if (newHistory.length > 50) newHistory.shift();
@@ -251,6 +249,7 @@ const App: React.FC = () => {
     }
   };
 
+  // --- 关键修改：重写导出功能，注入文本处理逻辑 ---
   const exportForGithub = () => {
     const siteData = { profile, theme, primaryColor };
     
@@ -269,6 +268,7 @@ const App: React.FC = () => {
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        a { text-decoration: none; }
     </style>
 </head>
 <body>
@@ -293,28 +293,79 @@ const App: React.FC = () => {
             const getStyleAttr = (s) => {
               if(!s) return '';
               let styleStr = 'style="';
-              if(s.fontSize) styleStr += \`font-size: \${s.fontSize};\`;
+              if(s.fontSize) styleStr += \`font-size: \${String(s.fontSize).match(/^\\d+$/) ? s.fontSize + 'px' : s.fontSize};\`;
               if(s.fontWeight) styleStr += \`font-weight: \${s.fontWeight};\`;
               if(s.color) styleStr += \`color: \${s.color};\`;
               if(s.fontFamily) styleStr += \`font-family: \${families[s.fontFamily] || 'inherit'};\`;
-              /* ---------- 修改 1: 确保导出时包含 Line Height ---------- */
-              if(s.lineHeight) styleStr += \`line-height: \${s.lineHeight};\`;
-              /* ---------------------------------------------------- */
+              if(s.lineHeight) styleStr += \`line-height: \${String(s.lineHeight).match(/^\\d+$/) && Number(s.lineHeight) > 4 ? s.lineHeight + 'px' : s.lineHeight};\`;
               styleStr += '"';
               return styleStr;
+            };
+
+            /* --- 核心修复：添加处理链接和格式的函数 --- */
+            const processText = (text, links) => {
+                const safeText = text ? String(text) : '';
+                if (!links || links.length === 0) return safeText;
+
+                let segments = [{ text: safeText }];
+
+                links.forEach(link => {
+                    if (!link.matchText) return;
+                    let nextSegments = [];
+                    segments.forEach(seg => {
+                        if (seg.link) {
+                            nextSegments.push(seg);
+                            return;
+                        }
+                        try {
+                            const escapedMatch = link.matchText.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&');
+                            const regex = new RegExp(\`(\${escapedMatch})\`, 'gi');
+                            const parts = seg.text.split(regex);
+                            parts.forEach(p => {
+                                if (p && link.matchText && p.toLowerCase() === link.matchText.toLowerCase()) {
+                                    nextSegments.push({ text: p, link });
+                                } else if (p) {
+                                    nextSegments.push({ text: p });
+                                }
+                            });
+                        } catch (e) {
+                            nextSegments.push(seg);
+                        }
+                    });
+                    segments = nextSegments;
+                });
+
+                return segments.map(seg => {
+                    if (!seg.link) return seg.text;
+                    const link = seg.link;
+                    const styleStr = getStyleAttr(link.style);
+                    let href = link.url || '#';
+                    let onClick = '';
+                    
+                    if (link.linkType === 'internal' && link.internalPageId) {
+                         href = '#';
+                         onClick = \`onclick="window.switchPage('\${link.internalPageId}'); return false;"\`;
+                    }
+                    
+                    const finalStyle = \`style="color: \${link.style?.color || primaryColor}; text-decoration: underline; text-underline-offset: 4px; \${styleStr.replace('style="', '').replace('"', '')}"\`;
+                    
+                    return \`<a href="\${href}" \${onClick} class="hover:opacity-70 transition-opacity" \${finalStyle}>\${seg.text}</a>\`;
+                }).join('');
             };
 
             const renderBlock = (block) => {
                 let content = '';
                 const widthClass = block.layoutConfig?.width === 'narrow' ? 'max-w-3xl' : block.layoutConfig?.width === 'medium' ? 'max-w-4xl' : 'max-w-6xl';
                 
+                /* 注意：这里所有 block.items?.text 现在都包裹了 processText 函数 */
                 if (block.type === 'bio-hero') {
                     content = \`
                         <div class="flex flex-col lg:flex-row gap-16 items-start mb-28 p-8 rounded-3xl" style="background-color: \${primaryColor}08">
                             <img src="\${block.items[0]?.image}" class="w-64 h-80 object-cover shadow-xl border border-slate-100 p-1 bg-white rounded-2xl">
                             <div class="flex-1 space-y-6">
-                                <h1 class="text-3xl font-bold tracking-tight text-slate-900" style="border-left: 6px solid \${primaryColor}; padding-left: 1.5rem;">\${block.title.text}</h1>
-                                <div class="text-lg leading-relaxed text-slate-700 font-medium" style="\${getStyleAttr(block.items[0]?.style)} white-space: pre-wrap;">\${block.items[0]?.text}</div>
+                                <h1 class="text-3xl font-bold tracking-tight text-slate-900" style="border-left: 6px solid \${primaryColor}; padding-left: 1.5rem;">\${processText(block.title.text, block.title.inlineLinks)}</h1>
+                                <div class="text-lg leading-relaxed text-slate-700 font-medium" style="\${getStyleAttr(block.items[0]?.style)} white-space: pre-wrap;">\${processText(block.items[0]?.text, block.items[0]?.inlineLinks)}</div>
+                                \${block.items[0]?.subtext ? \`<div class="text-base text-slate-500 italic opacity-80" style="white-space: pre-wrap;">\${processText(block.items[0]?.subtext, block.items[0]?.inlineLinks)}</div>\` : ''}
                             </div>
                         </div>\`;
                 } else if (block.type === 'contact-grid') {
@@ -322,17 +373,17 @@ const App: React.FC = () => {
                         <div class="mb-28">
                             <h2 class="text-2xl font-black mb-8 border-b border-slate-100 pb-2 flex items-center gap-4">
                                 <span class="w-1.5 h-6 rounded-sm" style="background-color: \${primaryColor}"></span>
-                                \${block.title.text}
+                                \${processText(block.title.text, block.title.inlineLinks)}
                             </h2>
                             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                                 \${block.items.map(item => \`
                                     <div class="p-6 bg-white border border-slate-100 rounded-[32px] flex flex-col items-center text-center gap-4 shadow-sm">
                                         <div class="w-14 h-14 rounded-2xl flex items-center justify-center bg-slate-50 border border-slate-50 p-2.5" style="border-color: \${primaryColor}40">
-                                            <div class="w-full h-full text-slate-600 font-black text-[10px]">\${item.icon || 'LINK'}</div>
+                                            <div class="w-full h-full text-slate-600 font-black text-[10px]">\${item.icon === 'custom' && item.customIcon ? \`<img src="\${item.customIcon}" class="w-full h-full object-contain">\` : (item.icon || 'LINK')}</div>
                                         </div>
                                         <div>
-                                            <p class="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">\${item.text}</p>
-                                            <p class="text-sm font-bold text-slate-800 break-all" style="\${getStyleAttr(item.style)} white-space: pre-wrap;">\${item.subtext}</p>
+                                            <p class="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">\${processText(item.text, item.inlineLinks)}</p>
+                                            <p class="text-sm font-bold text-slate-800 break-all" style="\${getStyleAttr(item.style)} white-space: pre-wrap;">\${processText(item.subtext, item.inlineLinks)}</p>
                                         </div>
                                     </div>
                                 \`).join('')}
@@ -343,7 +394,7 @@ const App: React.FC = () => {
                         <div class="mb-28">
                             <h2 class="text-2xl font-black mb-8 border-b border-slate-100 pb-2 flex items-center gap-4">
                                 <span class="w-1.5 h-6 rounded-sm" style="background-color: \${primaryColor}"></span>
-                                \${block.title.text}
+                                \${processText(block.title.text, block.title.inlineLinks)}
                             </h2>
                             <div class="space-y-10">
                                 \${block.items.map(item => \`
@@ -351,8 +402,8 @@ const App: React.FC = () => {
                                         \${item.date ? \`<div class="w-20 shrink-0 font-black text-slate-300 text-xl">\${item.date}</div>\` : ''}
                                         \${item.image ? \`<div class="w-32 h-32 shrink-0"><img src="\${item.image}" class="w-full h-full object-cover rounded-xl shadow-md"></div>\` : ''}
                                         <div class="flex-1">
-                                            <div class="text-xl font-bold text-slate-800" style="\${getStyleAttr(item.style)} white-space: pre-wrap;">\${item.text}</div>
-                                            <p class="text-base text-slate-500 mt-2 leading-relaxed font-medium" style="white-space: pre-wrap;">\${item.subtext || ''}</p>
+                                            <div class="text-xl font-bold text-slate-800" style="\${getStyleAttr(item.style)} white-space: pre-wrap;">\${processText(item.text, item.inlineLinks)}</div>
+                                            <p class="text-base text-slate-500 mt-2 leading-relaxed font-medium" style="white-space: pre-wrap;">\${processText(item.subtext || '', item.inlineLinks)}</p>
                                         </div>
                                     </div>
                                 \`).join('')}
@@ -368,7 +419,7 @@ const App: React.FC = () => {
                 <div class="p-12 md:p-24 bg-white min-h-screen">
                     <div class="max-w-6xl mx-auto shadow-2xl rounded-[80px] border border-slate-100 p-12 md:p-24 bg-white theme-container">
                         <header class="mb-32 flex flex-col md:flex-row md:items-end justify-between gap-12 pb-20 border-b-2 border-slate-100">
-                            <h1 class="text-7xl font-black tracking-tighter leading-none" \${getStyleAttr(profile.name.style)}>\${profile.name.text}</h1>
+                            <h1 class="text-7xl font-black tracking-tighter leading-none" \${getStyleAttr(profile.name.style)}>\${processText(profile.name.text, profile.name.inlineLinks)}</h1>
                             <nav class="flex gap-12">
                                 \${profile.pages.map(p => \`
                                     <button onclick="window.switchPage('\${p.id}')" class="text-xs font-black uppercase tracking-[0.4em] transition-all relative \${p.id === activePageId ? '' : 'opacity-20 hover:opacity-100'}" style="color: \${p.id === activePageId ? primaryColor : 'inherit'}">
@@ -408,6 +459,7 @@ const App: React.FC = () => {
     URL.revokeObjectURL(url);
     setIsPublishDialogOpen(false);
   };
+  // -----------------------------------------------------
 
   const addPage = () => {
     const newPage: PageData = { id: `p-${Date.now()}`, title: 'New Page', layout: [] };
@@ -664,9 +716,6 @@ const App: React.FC = () => {
               <div className="space-y-2">
                 <label className="text-[10px] font-bold text-slate-400 uppercase">Typography & Content</label>
                 
-                {/* ---------- 修改 2: 优化控制面板布局，增加行距控制 ---------- */}
-                
-                {/* 字体选择独立一行，因为名字比较长 */}
                 <select className="w-full p-2 bg-slate-50 rounded-lg text-xs mb-2" value={item?.style?.fontFamily || 'sans'} onChange={e => updateByPath([...editingElement.path, 'style', 'fontFamily'], e.target.value)}>
                   {FONTS.map(f => <option key={f.key} value={f.key}>{f.name}</option>)}
                 </select>
@@ -675,10 +724,9 @@ const App: React.FC = () => {
                   {/* 字体大小 */}
                   <input type="text" placeholder="Size (e.g. 15)" className="w-full p-2 bg-slate-50 rounded-lg text-xs" value={item?.style?.fontSize || ''} onChange={e => updateByPath([...editingElement.path, 'style', 'fontSize'], e.target.value)} />
                   
-                  {/* 行距 (Line Height) - 新增功能 */}
+                  {/* 行距 (Line Height) */}
                   <input type="text" placeholder="Line Height (e.g. 1.6)" className="w-full p-2 bg-slate-50 rounded-lg text-xs" value={item?.style?.lineHeight || ''} onChange={e => updateByPath([...editingElement.path, 'style', 'lineHeight'], e.target.value)} />
                 </div>
-                {/* -------------------------------------------------------- */}
                 
                 <div className="flex gap-2">
                   <input type="color" className="flex-1 h-8 rounded-lg" value={item?.style?.color || '#000000'} onChange={e => updateByPath([...editingElement.path, 'style', 'color'], e.target.value)} />
