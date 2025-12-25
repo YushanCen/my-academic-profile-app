@@ -249,7 +249,7 @@ const App: React.FC = () => {
     }
   };
 
-  // --- 导出逻辑：加入对齐类名 Safelist ---
+  // --- 关键修复：智能对齐转换 (text-align -> justify-content) ---
   const exportForGithub = () => {
     const siteData = { profile, theme, primaryColor };
     
@@ -277,21 +277,17 @@ const App: React.FC = () => {
             }
           },
           safelist: [
-            /* 字体大小 */
             'text-xs', 'text-sm', 'text-base', 'text-lg', 'text-xl', 'text-2xl', 'text-3xl', 'text-4xl', 'text-5xl', 'text-6xl', 'text-7xl',
-            /* 字体样式 */
             'font-serif', 'font-sans', 'font-mono', 'font-black', 'font-bold', 'font-normal', 'font-light',
             'italic', 'tracking-tight', 'tracking-tighter', 'leading-none', 'uppercase', 'tracking-widest', 'tracking-[0.3em]', 'tracking-[0.6em]',
-            /* 对齐与布局 (新增关键点) */
-            'text-center', 'text-left', 'text-right', 'text-justify', 'mx-auto',
-            'flex-col', 'items-start', 'items-center', 'justify-center', 'justify-between', 'gap-8', 'gap-10', 'gap-12', 'gap-16',
-            /* 间距 */
             'p-24', 'p-20', 'p-16', 'p-12', 'p-10', 'p-8',
             'rounded-[80px]', 'rounded-[48px]', 'rounded-[3rem]', 'rounded-none', 'rounded-2xl',
             'border-t-[12px]', 'border-l-[32px]', 'border-b-[6px]', 'border-l-[8px]', 'border-l-[1px]', 'border-t-[20px]', 'border-b-4', 'border-b-2', 'border-b',
             'shadow-2xl', 'shadow-sm', 'shadow-none',
             'bg-[#f8f9fa]', 'bg-[#fffcf9]', 'bg-[#fdfbf7]', 'bg-white', 'bg-slate-50', 'bg-slate-100', 'bg-slate-800',
-            'max-w-7xl', 'border-x-[1px]', 'border-l-[12px]', 'border-l-4'
+            'max-w-7xl', 'border-x-[1px]', 'border-l-[12px]', 'border-l-4',
+            'flex-col', 'items-start', 'items-center', 'justify-center', 'justify-between', 'justify-end', 'gap-8', 'gap-10', 'gap-12', 'gap-16',
+            'text-center', 'text-left', 'text-right'
           ]
         }
       }
@@ -308,7 +304,6 @@ const App: React.FC = () => {
             line-height: 1.5;
         }
         
-        /* 默认大字样式 (可被手动覆盖) */
         .text-7xl { font-size: 4.5rem; line-height: 1; }
         .text-6xl { font-size: 3.75rem; line-height: 1; }
         .text-5xl { font-size: 3rem; line-height: 1; }
@@ -346,7 +341,6 @@ const App: React.FC = () => {
               'mono': 'JetBrains Mono, monospace'
             };
 
-            /* 主题配置表 */
             const themeConfig = {
                 'theme-1': {
                     container: "bg-white p-24 rounded-[80px] shadow-2xl border-t-[12px]",
@@ -430,8 +424,13 @@ const App: React.FC = () => {
               }
               if(s.lineHeight) styleStr += \`line-height: \${String(s.lineHeight).match(/^\\d+$/) && Number(s.lineHeight) > 4 ? s.lineHeight + 'px' : s.lineHeight};\`;
               
-              // 关键修复：加入 textAlign 处理
-              if(s.textAlign) styleStr += \`text-align: \${s.textAlign};\`;
+              // 关键修复：如果用户设置了对齐，同时应用 justify-content 以兼容 Flex 布局
+              if(s.textAlign) {
+                 styleStr += \`text-align: \${s.textAlign};\`;
+                 if(s.textAlign === 'center') styleStr += 'justify-content: center;';
+                 else if(s.textAlign === 'right') styleStr += 'justify-content: flex-end;';
+                 else styleStr += 'justify-content: flex-start;';
+              }
 
               styleStr += '"';
               return styleStr;
@@ -622,7 +621,8 @@ const App: React.FC = () => {
     URL.revokeObjectURL(url);
     setIsPublishDialogOpen(false);
   };
-  // ... rest of the component logic remains unchanged
+  
+  // ... rest of logic unchanged
   
   const addPage = () => {
     const newPage: PageData = { id: `p-${Date.now()}`, title: 'New Page', layout: [] };
@@ -1276,114 +1276,4 @@ const App: React.FC = () => {
             <h2 className="text-3xl font-black mb-2 tracking-tighter text-slate-900">Download for GitHub</h2>
             <p className="text-slate-500 text-sm mb-8 font-medium leading-relaxed">Download a functional <span className="font-bold">index.html</span> file that you can host on GitHub Pages to launch your academic portal immediately.</p>
             
-            <div className={`flex items-center gap-2 p-5 bg-slate-50 rounded-2xl border border-slate-100 mb-8`}>
-              <input 
-                className="bg-transparent flex-1 font-bold text-slate-900 outline-none text-lg" 
-                value={publishSubdomain} 
-                onChange={e => setPublishSubdomain(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))} 
-                placeholder="my-domain" 
-                autoFocus
-              />
-              <span className="text-slate-400 font-bold">.github.io</span>
-            </div>
-
-            <div className="flex gap-4">
-              <button 
-                onClick={() => setIsPublishDialogOpen(false)} 
-                className="flex-1 py-4 bg-slate-100 text-slate-400 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] hover:bg-slate-200 transition-all"
-              >
-                Cancel
-              </button>
-              <button 
-                onClick={exportForGithub} 
-                className="flex-[2] py-4 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2"
-              >
-                Download index.html
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <div className="flex-1 flex overflow-hidden">
-        <aside className="w-72 bg-white border-r border-slate-200 p-6 space-y-8 overflow-y-auto custom-scrollbar">
-          <section>
-            <h3 className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-4">Aesthetics</h3>
-            <div className="grid grid-cols-2 gap-2 mb-4">
-              {THEME_LIST.map(t => (
-                <button key={t.id} onClick={() => setTheme(t.id as ThemeType)} className={`px-3 py-4 rounded-xl text-[9px] font-black uppercase border transition-all ${theme === t.id ? 'bg-[#9B89B3] text-white shadow-lg border-[#9B89B3]' : 'bg-white text-slate-400 border-slate-100 hover:border-[#9B89B3]/30'}`}>
-                  {t.name}
-                </button>
-              ))}
-            </div>
-            <button onClick={() => setEditingElement({ type: 'theme-color', path: [] })} className="w-full py-2 bg-slate-50 text-slate-500 text-[9px] font-black uppercase rounded-lg border-2 border-dashed hover:bg-slate-100 transition-colors">Theme Colors</button>
-          </section>
-
-          <section>
-            <h3 className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-4">Layer Stack</h3>
-            <div className="space-y-2">
-              {activePage.layout.map((b, idx) => (
-                <div key={b.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl group border border-transparent hover:border-[#9B89B3]/20 transition-all">
-                  <span className="text-[9px] font-black text-slate-500 uppercase truncate max-w-[90px]">{b.type}</span>
-                  <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button onClick={() => setEditingElement({ type: 'block-config', path: ['pages', profile.pages.findIndex(p => p.id === activePageId).toString(), 'layout', idx.toString()] })} className="text-[8px] font-black text-[#9B89B3] hover:brightness-75">EDIT</button>
-                    <div className="flex items-center gap-1">
-                      <button onClick={() => moveBlock(idx, 'up')} className="text-slate-400 hover:text-slate-900">▴</button>
-                      <button onClick={() => moveBlock(idx, 'down')} className="text-slate-400 hover:text-slate-900">▾</button>
-                      <button onClick={() => deleteBlock(b.id)} className="text-red-300 hover:text-red-500 ml-1">✕</button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-              <div className="pt-2">
-                <select onChange={e => { if (e.target.value) { addBlock(e.target.value as BlockType); e.target.value = ""; } }} className="w-full py-3 bg-[#9B89B3] text-white rounded-xl text-[9px] font-black uppercase text-center focus:outline-none cursor-pointer hover:brightness-110 transition-all shadow-md">
-                  <option value="">+ ADD COMPONENT</option>
-                  <optgroup label="Research & Team">
-                    <option value="bio-hero">Individual Profile</option>
-                    <option value="lab-team">Team Grid (Members)</option>
-                    <option value="group-photo">Group Image / Photo Grid</option>
-                    <option value="group-summary">Group Overview</option>
-                  </optgroup>
-                  <optgroup label="Academic Content">
-                    <option value="education-employment">Education & Employment</option>
-                    <option value="publications">Publications</option>
-                    <option value="funding">Funding / Grants</option>
-                    <option value="resources">Datasets & Code</option>
-                  </optgroup>
-                  <optgroup label="Service">
-                    <option value="activities">Activities & Service</option>
-                    <option value="editorial-services">Editorial Roles</option>
-                    <option value="impact-outreach">Impact & Outreach</option>
-                  </optgroup>
-                  <optgroup label="Misc">
-                    <option value="technical-skills">Technical Skills</option>
-                    <option value="join-lab">Join the Lab</option>
-                    <option value="contact-grid">Contact Section</option>
-                    <option value="custom">Custom Section</option>
-                  </optgroup>
-                </select>
-              </div>
-            </div>
-          </section>
-        </aside>
-
-        <main className="flex-1 overflow-y-auto p-12 bg-[#f8fafc] flex justify-center custom-scrollbar">
-          <div className="w-full max-w-6xl animate-in fade-in slide-in-from-bottom-10 duration-700">
-             <AcademicTemplate 
-                data={profile}
-                activePageId={activePageId}
-                setActivePageId={setActivePageId}
-                theme={theme}
-                primaryColor={primaryColor}
-                onSelectElement={setEditingElement}
-                searchQuery={searchQuery}
-             />
-          </div>
-        </main>
-      </div>
-      {renderInspector()}
-    </div>
-  );
-};
-
-export default App;
+            <div className={`
