@@ -249,7 +249,7 @@ const App: React.FC = () => {
     }
   };
 
-  // --- 关键修改：重写导出功能，注入文本处理逻辑 ---
+  // --- 关键修改：修复了正则表达式的转义问题 ---
   const exportForGithub = () => {
     const siteData = { profile, theme, primaryColor };
     
@@ -318,7 +318,8 @@ const App: React.FC = () => {
                             return;
                         }
                         try {
-                            const escapedMatch = link.matchText.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&');
+                            /* 注意这里：我们把 '$\{...}' 里的 $ 符号转义了 */
+                            const escapedMatch = link.matchText.replace(/[.*+?^\${}()|[\\]\\\\]/g, '\\\\$&');
                             const regex = new RegExp(\`(\${escapedMatch})\`, 'gi');
                             const parts = seg.text.split(regex);
                             parts.forEach(p => {
@@ -716,6 +717,7 @@ const App: React.FC = () => {
               <div className="space-y-2">
                 <label className="text-[10px] font-bold text-slate-400 uppercase">Typography & Content</label>
                 
+                {/* 字体选择独立一行，因为名字比较长 */}
                 <select className="w-full p-2 bg-slate-50 rounded-lg text-xs mb-2" value={item?.style?.fontFamily || 'sans'} onChange={e => updateByPath([...editingElement.path, 'style', 'fontFamily'], e.target.value)}>
                   {FONTS.map(f => <option key={f.key} value={f.key}>{f.name}</option>)}
                 </select>
@@ -724,7 +726,7 @@ const App: React.FC = () => {
                   {/* 字体大小 */}
                   <input type="text" placeholder="Size (e.g. 15)" className="w-full p-2 bg-slate-50 rounded-lg text-xs" value={item?.style?.fontSize || ''} onChange={e => updateByPath([...editingElement.path, 'style', 'fontSize'], e.target.value)} />
                   
-                  {/* 行距 (Line Height) */}
+                  {/* 行距 (Line Height) - 新增功能 */}
                   <input type="text" placeholder="Line Height (e.g. 1.6)" className="w-full p-2 bg-slate-50 rounded-lg text-xs" value={item?.style?.lineHeight || ''} onChange={e => updateByPath([...editingElement.path, 'style', 'lineHeight'], e.target.value)} />
                 </div>
                 
